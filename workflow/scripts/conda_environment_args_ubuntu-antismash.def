@@ -1,0 +1,75 @@
+Bootstrap: docker
+
+From: ubuntu:22.04
+
+%arguments
+	ENV_FILE=environment.yml
+
+%files
+    {{ ENV_FILE }}
+
+%environment
+
+%post
+	apt-get update && apt-get -y upgrade
+	apt-get -y install \
+	build-essential \
+	wget \
+	bzip2 \
+	ca-certificates \
+	libglib2.0-0 \
+	libxext6 \
+	libsm6 \
+	libxrender1 \
+	git \
+	less \
+	nano \
+	tree \
+	unzip \
+	libdbus-1-3
+	rm -rf /var/lib/apt/lists/*
+	apt-get clean
+
+    # miniconda3: get miniconda2 version 23.11.0
+    wget https://repo.anaconda.com/miniconda/Miniconda3-py39_23.11.0-2-Linux-x86_64.sh -O miniconda.sh
+
+    # install conda
+    bash miniconda.sh -b -p /opt/conda
+    export PATH="/opt/miniconda/bin:$PATH"
+
+    ENV_NAME=$(head -1 {{ ENV_FILE }} | cut -d' ' -f2)
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> $APPTAINER_ENVIRONMENT
+    echo "conda activate $ENV_NAME" >> $APPTAINER_ENVIRONMENT
+
+    . /opt/conda/etc/profile.d/conda.sh
+    conda env create -f {{ ENV_FILE }} -p /opt/conda/envs/$ENV_NAME
+    conda clean --all
+	
+	# installing the AntiSMASH databases
+	# ref: https://stackoverflow.com/a/75266596/18382033
+	conda run -n $ENV_NAME download-antismash-databases
+
+%runscript
+    exec "$@"
+
+%labels
+	OriginalAuthorGitHub csc-training
+	ModifyingAuthor ViVarga
+	Version v0.3
+	Date 20.07.2023
+
+%help
+	This is a container to create containerized versions of conda environments
+	from .yml files. 
+	Create a containerized version of any conda environment with: 
+	apptainer build --build-arg ENV_FILE=env-name.yml my_container.sif conda_environment_args.def
+	The default .yml file name is environment.yml
+	---
+	The original code is available here: 
+	https://csc-training.github.io/csc-env-eff/hands-on/singularity/singularity_extra_replicating-conda.html
+	It is part of this GitHub repository: 
+	https://github.com/csc-training/csc-env-eff/tree/master
+	More information on apptainer definition files can be found here: 
+	https://apptainer.org/docs/user/latest/definition_files.html
+	Information on Apptainer in general can be found here: 
+	https://apptainer.org/docs/user/latest/index.html
