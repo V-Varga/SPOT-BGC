@@ -50,4 +50,3 @@ ls */*.fq > FullFileNamesTrimmed.txt;
 # and parse them with the python script
 python ../../../workflow/scripts/create_target_db.py ../../../resources/SPOT-BGC__sample-target_info_100k.txt \
 FullFileNamesTrimmed.txt noexclusion,noneexcluded;
-mv FullFileNamesTrimmed.txt results/DataNonHuman/100k_Filt/;
