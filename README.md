@@ -13,15 +13,34 @@ Last Update: 2024.11.11
 
 ### Introduction 
 
-The SPOT-BGC pipeline is designed to process metagenomic read data, eliminate human contamination, and assemble bacterial genomes, in order to be able to predict Biosynthetic Gene Clusters (BGCs) present in the data. Metagenome-Assembled Genomes (MAGs) are produced during an intermediate step of this pipeline.
+The SPOT-BGC pipeline is designed to process metagenomic FASTQ read data, eliminate human contamination, and assemble bacterial genomes; in order to predict Biosynthetic Gene Clusters (BGCs) present in the data. Metagenome-Assembled Genomes (MAGs) are produced during an intermediate step of this pipeline.
+
+This pipeline can process both paired-end (PE) and single-end (SE) FASTQ input. In order to preserve as much data as possible, assembly is performed on both a per-sample and per-cohort basis. 
+
 
 ### Pipeline status
 
 Initial publication, 2024.11.13: Build Alpha (ver. 0.9)
- - The SPOT-BGC pipeline is functional, with the human genome as reference. 
+ - The SPOT-BGC pipeline is functional, with the human genome as the reference genome. 
  - Note that while it has been successfully run for the analysis it was designed for, extensive testing of the pipeline has not been carried out.
- - At this stage, most users will need to modify the `config.yaml` file manually in order to change the reference genome, as well as modify the `Snakefile` manually in order to change the settings of the various programs. 
+ - At this stage, most users will need to modify the `config.yaml` file manually in order to change the reference genome, as well as modify the `Snakefile` manually in order to change the settings/arguments of the various programs. 
  - Note that the containers used to run the programs are not included in this repository, but should be created by the user as described below.
+
+
+## Pipeline structure
+
+The SPOT-BGC pipeline performs the following on input metagenomic FASTQ reads: 
+1. Quality assessment: FastQC, MultiQC
+2. Quality trimming: Trimmomatic
+3. Human read filtration by mapping to the human genome: Bowtie2
+4. Normalization of read counts: BBNorm
+5. For the per-sample assemblies, sample IDs with <100k reads remaining are filtered out
+6. Assembly: per-sample with SPAdes, per-cohort with MEGAHIT
+7. Human contig elimination (sanity check): BLASTN
+8. Binning of contigs into MAGs: MetaBAT
+9. Quality assessment of the MAGs: CheckM
+10. Taxonomic assignments of assemblies: MetaPhlAn
+11. BGC predictions: GECCO, AntiSMASH
 
 
 ## Dependencies
@@ -33,7 +52,7 @@ The primary dependencies of the SPOT-BGC pipeline are:
 
 ## Running SPOT-BGC
 
-Owing to a temporary bug in Snakemake at the time of this pipeline's creation, the programs used must be run out of containers, rather than via `conda` environments [Ref](https://github.com/metagenome-atlas/metagenome-assembly/blob/main/workflow/Snakefile). All files necessary to generate the containers are included in this repository. 
+Owing to a temporary bug in Snakemake at the time of this pipeline's creation, the programs used must be run out of containers, rather than via `conda` environments [Ref](https://github.com/snakemake/snakemake/issues/3163). All files necessary to generate the containers are included in this repository. 
 
 To build the containers with Apptainer, run the following code from the `workflow/` directory: 
 
@@ -65,7 +84,7 @@ apptainer build --build-arg ENV_FILE=../envs/env-gecco.yml env-gecco.sif ../scri
 
 ```
 
-Set up your project as follows: 
+Set up your project file structure as follows: 
 
 ```
 ├── LICENSE
@@ -91,10 +110,10 @@ Set up your project as follows:
 ```
 
 For the setup above, please note the following: 
- - The COHORT_ID is intended to the NCBI BioProject number, but can be designated by the user however you wish. However, a cohort **must** be provided for every sample.
+ - The COHORT_ID is intended to be the NCBI BioProject number, but can be designated by the user however you wish. However, a cohort **must** be provided for every sample.
  - The sample raw FASTQ files should be in directories with the sample name. This is the structure that results if the data is downloaded directly from the NCBI with SRA (Sequence Read Archive) `fetch`.
  - The REFERENCE should be a DNA reference genome. Modify the `config.yaml` file located in the `config/` directory with your reference genome name.
- - As is illustrated, the SPOT-BGC pipeline works with both paired-end (PE) and single-end (SE) input FASTQ files. Note, however, that PE and SE reads from the same cohort ID will _not_ be assembled into one cohort assembly. The per-cohort assemblies use either SE or PE reads, so in the case that your cohort contains both PE and SE reads, two per-cohort assemblies will be generated. This will likely result in errors!
+ - As is illustrated, the SPOT-BGC pipeline works with both PE and SE input FASTQ files. Note, however, that PE and SE reads from the same cohort ID will _not_ be assembled into one cohort assembly. The per-cohort assemblies use either SE or PE reads, so in the case that your cohort contains both PE and SE reads, the pipeline will attempt to create two separate per-cohort assemblies. This will likely result in errors!
 
 Once you have organized your project as illustrated above, you will need to generate a data table that the `Snakefile` will take as input in order to handle wildcards in the file names. Please run the following in your terminal: 
 
