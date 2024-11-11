@@ -32,9 +32,9 @@ Known bugs and limitations:
 		Snakemake pipeline formatting, and therefore based on the input contig file name. 
 
 Usage
-	./parse_nonhuman_blastn.py blastn_outfile contigs_infile
+	./parse_nonhuman_blastn.py blastn_outfile contigs_infile log_outfile
 	OR
-	python parse_nonhuman_blastn.py blastn_outfile contigs_infile
+	python parse_nonhuman_blastn.py blastn_outfile contigs_infile log_outfile
 
 This script was written for Python 3.9.19, in Spyder 5.5.5. 
 
@@ -53,14 +53,18 @@ import pandas as pd # enables the handling of dataframes in python
 # input files
 blastn_outfile = sys.argv[1]
 contigs_infile = sys.argv[2]
+log_outfile = sys.argv[3]
 
 # output file
 # remove the file path from the file name
 infile_base = os.path.basename(contigs_infile)
 # remove the file extension from the file name
-output_base = os.path.splitext(infile_base)[0:-1]
+output_base_list = os.path.splitext(infile_base)[0:-1]
+# join the list back together
+output_base = '.'.join(output_base_list)
 # create the output file name
 output_contigs = output_base + "_nonHuman.fasta"
+
 
 
 ## Part 2: Loading BLASTN data into Pandas & filter it
@@ -117,7 +121,7 @@ with open(contigs_infile, "r") as infile:
 ## Part 5: Filter out the mapped sequences & write out results
 
 # filter out contigs that remain in the blastn database
-with open(output_contigs, "w") as outfile:
+with open(output_contigs, "w") as outfile, open(log_outfile, "a+") as outlogfile:
 	# open the outfile for writing
 	for header_key in fasta_dict.keys():
 		# iterate over the FASTA dictionary via its keys
@@ -125,3 +129,5 @@ with open(output_contigs, "w") as outfile:
 			# if this header doesn't match the list of bad IDs
 			# write it out to the output FASTA file
 			outfile.write(header_key + fasta_dict[header_key])
+			# and add the header to the logfile, as well
+			outlogfile.write(header_key)
