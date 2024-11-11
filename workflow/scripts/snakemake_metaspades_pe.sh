@@ -36,7 +36,7 @@ ls results/DataNonHuman/100k_Filt/*/*.1.fq | while read file; do
 	file_base_id="${file_base2%_norm}"; #this removes the "_norm" substring
 	mkdir -p results/Assembly/PerSample/${parentname}/${file_base_id}; #create an output directory
 	# now run the program
-	apptainer exec workflow/containers/assembly-vaginomics.sif metaspades.py \
+	apptainer exec workflow/containers/metagenome_assembly.sif metaspades.py \
 	-1 $file -2 results/DataNonHuman/100k_Filt/${parentname}/${file_base_id}_norm.2.fq \
 	--checkpoints all --threads $thread_count \
 	-o results/Assembly/PerSample/${parentname}/${file_base_id}/${file_base_id};
