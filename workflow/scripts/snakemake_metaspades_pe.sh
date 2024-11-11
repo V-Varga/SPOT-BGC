@@ -39,10 +39,10 @@ ls results/DataNonHuman/100k_Filt/*/*.1.fq | while read file; do
 	apptainer exec workflow/containers/metagenome_assembly.sif metaspades.py \
 	-1 $file -2 results/DataNonHuman/100k_Filt/${parentname}/${file_base_id}_norm.2.fq \
 	--checkpoints all --threads $thread_count \
-	-o results/Assembly/PerSample/${parentname}/${file_base_id}/${file_base_id};
+	-o results/Assembly/PerSample/${parentname}/${file_base_id}/;
 	# finally copy the primary output file to a more specific filename
-	cp results/Assembly/PerSample/${parentname}/${file_base_id}/${file_base_id}/scaffolds.fasta \
-	results/Assembly/PerSample/${parentname}/${file_base_id}/${file_base_id}/${file_base_id}_scaffolds.fasta;
+	cp results/Assembly/PerSample/${parentname}/${file_base_id}/scaffolds.fasta \
+	results/Assembly/PerSample/${parentname}/${file_base_id}/${file_base_id}_scaffolds.fasta;
 done;
 
 
