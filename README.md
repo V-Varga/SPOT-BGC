@@ -13,7 +13,7 @@ Last Update: 2024.11.11
 
 ### Introduction 
 
-The SPOT-BGC pipeline is designed to process metagenomic FASTQ read data, eliminate human contamination, and assemble bacterial genomes; in order to predict Biosynthetic Gene Clusters (BGCs) present in the data. Metagenome-Assembled Genomes (MAGs) are produced during an intermediate step of this pipeline.
+The SPOT-BGC pipeline is a workflow designed to process metagenomic FASTQ read data, eliminate human contamination, and assemble bacterial genomes; in order to predict Biosynthetic Gene Clusters (BGCs) present in the data. Metagenome-Assembled Genomes (MAGs) are produced during an intermediate step of this pipeline.
 
 This pipeline can process both paired-end (PE) and single-end (SE) FASTQ input. In order to preserve as much data as possible, assembly is performed on both a per-sample and per-cohort basis. 
 
