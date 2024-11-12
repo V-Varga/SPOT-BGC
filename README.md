@@ -6,7 +6,7 @@ _A Snakemake Pipeline to Output meTagenomics-derived Biosynthetic Gene Clusters_
 
 Author: Vi Varga
 
-Last Update: 2024.11.11
+Last Update: 2024.11.12
 
 
 ## Pipeline summary & status
@@ -20,7 +20,7 @@ This pipeline can process both paired-end (PE) and single-end (SE) FASTQ input. 
 
 ### Pipeline status
 
-Initial publication, 2024.11.13: Build Alpha (ver. 0.9)
+Initial publication, 2024.11.12: Build Beta (ver. 1.0)
  - The SPOT-BGC pipeline is functional, with the human genome as the reference genome. 
  - Note that while it has been successfully run for the analysis it was designed for, extensive testing of the pipeline has not been carried out.
  - At this stage, most users will need to modify the `config.yaml` file manually in order to change the reference genome, as well as modify the `Snakefile` manually in order to change the settings/arguments of the various programs. 
