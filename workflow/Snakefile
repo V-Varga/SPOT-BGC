@@ -1,0 +1,570 @@
+# Snakefile for SPOT-BGC workflow pipeline
+
+# Author: Vi Varga
+# Last edit date: 2024.11.10
+
+
+## Part 1: Setup
+
+# ref: https://github.com/metagenome-atlas/metagenome-assembly/blob/main/workflow/Snakefile
+from pathlib import Path
+import pandas as pd
+
+# absolute path to snakemake dir
+snakemake_dir = Path(workflow.snakefile).parent.resolve()
+
+# include default config values
+configfile: snakemake_dir.parent / "config/config.yaml"
+
+
+# load the data into dataframes
+# dataframe with the file basenames as index
+filebases_df = (pd.read_csv(config['targets_per_sample'], sep='\t').set_index('FileBase_Raw', drop=False))
+# dataframe with cohort-categorized samples IDs
+cohort_filebases_df = (pd.read_csv(config['targets_per_sample'], sep='\t').set_index('CohortBase_Raw', drop=False))
+# cohort sample index
+cohort_sample_df = (pd.read_csv(config['targets_per_sample'], sep='\t').set_index('CohortSample', drop=False))
+# filtered databases:
+# forward reads
+fq_R1_names_df = cohort_sample_df[cohort_sample_df['ReadNum'] == '1']
+# reverse reads
+fq_R2_names_df = cohort_sample_df[cohort_sample_df['ReadNum'] == '2']
+# SE reads
+fq_SE_names_df = cohort_sample_df[cohort_sample_df['ReadNum'] == 'SE']
+
+# later-usage dataframes
+# dataframe with the trimmed file basenames as index
+trimmed_filebases_df = (pd.read_csv(config['targets_per_sample'], sep='\t').set_index('FileBase_Trim', drop=False))
+
+# cohort target dataframes
+# dataframe with the file basenames as index
+cohort_targets_df = (pd.read_csv(config['targets_per_cohort'], sep='\t').set_index('Cohort', drop=False))
+
+
+## Part 2: Rule All & rule create_containers
+
+# rule all should report the final output files of the workflow
+rule all:
+	input:
+		expand('results/QualityChecks/Metagenome_Origin/{cohort_with_sample}_fastqc.html',
+			cohort_with_sample=cohort_filebases_df.CohortBase_Raw),
+		expand("results/QualityChecks/Metagenome_Origin/{cohort_id}/{cohort_id}_multiqc_report.html",
+			cohort_id=cohort_filebases_df.Cohort),
+		expand("results/Trimmomatic/{cohort_sample}.SE.fastq",
+			cohort_sample=fq_SE_names_df.CohortSample),
+		expand("results/Trimmomatic/{cohort_sample}.1.fastq",
+			cohort_sample=fq_R1_names_df.CohortSample),
+		expand("results/Trimmomatic/{cohort_sample}.2.fastq",
+			cohort_sample=fq_R1_names_df.CohortSample),
+		expand('results/QualityChecks/Metagenome_Filt/{cohort_with_sample}.{read}_fastqc.html',
+			cohort_with_sample = fq_R1_names_df.CohortSample, read=[1, 2]),
+		expand('results/QualityChecks/Metagenome_Filt/{cohort_with_sample}.SE_fastqc.html',
+			   cohort_with_sample = fq_SE_names_df.CohortSample),
+		expand("results/QualityChecks/Metagenome_Filt/{cohort_id}/{cohort_id}_multiqc_report.html",
+			   cohort_id=cohort_filebases_df.Cohort),
+		multiext("resources/Ref/GCA_000001405__29_GRCh38__p14_masked",".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2",
+				 ".rev.1.bt2", ".rev.2.bt2"),
+		expand("results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.1.fq",
+			cohort_with_sample = fq_R1_names_df.CohortSample),
+		expand("results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.2.fq",
+			cohort_with_sample = fq_R1_names_df.CohortSample),
+		expand("results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.SE.fq",
+			cohort_with_sample = fq_SE_names_df.CohortSample),
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
+			cohort_with_sample = fq_R1_names_df.CohortSample),
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
+			cohort_with_sample = fq_R1_names_df.CohortSample),
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
+			cohort_with_sample = fq_SE_names_df.CohortSample),
+		'logs/100k_filt.txt',
+		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_pe_log.txt",
+			cohort_norm_sample=fq_R1_names_df.CohortSample, allow_missing=True),
+		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt",
+			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True),
+		expand("logs/MEGAHIT/{cohort_name}_read_assembly_pe_log.txt",
+			cohort_name=fq_R1_names_df.Cohort),
+		expand("logs/MEGAHIT/{cohort_name}_read_assembly_se_log.txt",
+			cohort_name=fq_SE_names_df.Cohort),
+		multiext(config['human_genome'],
+			 ".ndb", ".nhr", ".nin", ".not", ".nsq", ".ntf", ".nto"),
+		"logs/AssemblyNonHuman_recordSample.txt",
+		"logs/AssemblyNonHuman_recordCohort.txt",
+		"logs/MAGs/PerSample/metabat.log",
+		"logs/MAGs/PerCohort/metabat.log",
+		"logs/MAG_QC/PerSample/CheckM.log",
+		"logs/MAG_QC/PerCohort/CheckM.log",
+		"logs/Taxonomy/PerCohort/metaphlan_se.log",
+		"logs/Taxonomy/PerCohort/metaphlan_pe.log",
+		"logs/BGCs/PerSample/gecco.log",
+		"logs/BGCs/PerCohort/gecco.log",
+		"logs/BGCs/PerSample/antismash.log",
+		"logs/BGCs/PerCohort/antismash.log"
+
+
+'''
+Due to a bug in Snakemake at the time of this pipeline's creation,
+Apptainer containers must be used rather than conda environments in order
+to run each step of the pipeline. 
+Ref: https://github.com/snakemake/snakemake/issues/3163
+Future updates of the pipeline will hopefully run using only conda YAML environments,
+significantly reducing the GitHub repository size.
+'''
+
+
+## Part 3: Workflow
+
+### Part 3a: Data filtration & preparation
+
+# quality checking of FASTQ files
+# rule fastqc_1 should run FASTQC on raw reads
+rule fastqc_1:
+	input:
+		fastq_raw = lambda wildcards: filebases_df.loc[wildcards.sample_ids, 'Location_Raw']
+	output:
+		fastqc_html_1 = 'results/QualityChecks/Metagenome_Origin/{cohort_id}/{sample_ids}_fastqc.html',
+		fastqc_zip_1 = 'results/QualityChecks/Metagenome_Origin/{cohort_id}/{sample_ids}_fastqc.zip'
+	threads: 1
+	# conda:
+	# 	"workflow/envs/env-QualityChecking.yml"
+	singularity:
+		"workflow/containers/env-QualityChecking.sif"
+	shell:
+		"fastqc -o results/QualityChecks/Metagenome_Origin/{wildcards.cohort_id}/ -f fastq {input.fastq_raw}"
+
+# rule multiqc_1 should create a multiqc report from the raw reads
+rule multiqc_1:
+	input:
+		fastqc_dir_1 = expand('results/QualityChecks/Metagenome_Origin/{cohort_base}_fastqc.zip',
+			cohort_base = cohort_filebases_df.CohortBase_Raw)
+	output:
+		multiqc_report_1 = "results/QualityChecks/Metagenome_Origin/{cohort_id}/{cohort_id}_multiqc_report.html"
+	threads: 1
+	singularity:
+		"workflow/containers/env-QualityChecking.sif"
+	shell:
+		"multiqc {input.fastqc_dir_1} --filename {output.multiqc_report_1}"
+
+
+# quality trimming of FASTQ files
+# rule trim_files_pe handles trimming paired-end reads
+# this rule and preceeding should be possible to skip
+rule trim_files_pe:
+	input:
+		fq1 = "resources/RawData/{cohort_id}/{sample_name,[A-Za-z0-9]+}/{sample_name,[A-Za-z0-9]+}_1.fastq",
+		fq2 = "resources/RawData/{cohort_id}/{sample_name,[A-Za-z0-9]+}/{sample_name,[A-Za-z0-9]+}_2.fastq"
+	output:
+		r1= "results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}.1.fastq",
+		r2="results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}.2.fastq",
+		# reads where trimming entirely removed the mate
+		r1_unpaired="results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}.1.unpaired.fastq",
+		r2_unpaired="results/Trimmomatic/{cohort_id}/{sample_name}.2.unpaired.fastq",
+		# summary file
+		trim_summary_pe="results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_summary.txt"
+	threads: 10
+	log:
+		"logs/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_log.txt"
+	singularity:
+		"workflow/containers/env-trimmomatic.sif"
+	shell:
+		"""
+		trimmomatic PE -threads {threads} -trimlog {log} -summary {output.trim_summary_pe}\
+		{input.fq1} {input.fq2} \
+		{output.r1} {output.r1_unpaired} \
+		{output.r2} {output.r2_unpaired} \
+		ILLUMINACLIP:NexteraPE-PE.fa:3:30:10:1:TRUE \
+		TRAILING:20 SLIDINGWINDOW:4:20 MINLEN:51
+		"""
+
+# rule trim_files_se handles trimming paired-end reads
+# this rule and preceeding should be possible to skip
+rule trim_files_se:
+	input:
+		fq_se = "resources/RawData/{cohort_id}/{sample_name,[A-Za-z0-9]+}/{sample_name,[A-Za-z0-9]+}.fastq"
+	output:
+		trimmed_se= "results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}.SE.fastq",
+		# summary file
+		trim_summary_pe="results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_summary.txt"
+	threads: 10
+	log:
+		"logs/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_log.txt"
+	singularity:
+		"workflow/containers/env-trimmomatic.sif"
+	shell:
+		"""
+		trimmomatic SE -threads {threads} -trimlog {log} -summary {output.trim_summary_pe} \
+		{input.fq_se} {output.trimmed_se} \
+		ILLUMINACLIP:TruSeq3-SE.fa:3:30:10:1:TRUE \
+		TRAILING:20 SLIDINGWINDOW:4:20 MINLEN:51
+		"""
+
+
+# quality assessment of the trimmed reads
+# rule fastqc_2 should run FASTQC on trimmed reads
+rule fastqc_2:
+	input:
+		fastq_trimmed = lambda wildcards: trimmed_filebases_df.loc[wildcards.sample_name, 'Location_Trim']
+	output:
+		fastqc_html_2 = 'results/QualityChecks/Metagenome_Filt/{cohort_id}/{sample_name}_fastqc.html',
+		fastqc_zip_2 = 'results/QualityChecks/Metagenome_Filt/{cohort_id}/{sample_name}_fastqc.zip'
+	threads: 1
+	singularity:
+		"workflow/containers/env-QualityChecking.sif"
+	shell:
+		"fastqc -o results/QualityChecks/Metagenome_Filt/{wildcards.cohort_id}/ -f fastq {input.fastq_trimmed}"
+
+# rule multiqc_2 should create a multiqc report from the trimmed reads
+rule multiqc_2:
+	input:
+		fastqc_dir_2 = expand('results/QualityChecks/Metagenome_Filt/{cohort_base}_fastqc.zip',
+			cohort_base = cohort_filebases_df.CohortBase_Trim)
+	output:
+		multiqc_report_2 = "results/QualityChecks/Metagenome_Filt/{cohort_id}/{cohort_id}_multiqc_report.html"
+	threads: 1
+	log:
+		"logs/MultiQC/{cohort_id}/{cohort_id}_log.txt"
+	singularity:
+		"workflow/containers/env-QualityChecking.sif"
+	shell:
+		"multiqc {input.fastqc_dir_2} --filename {output.multiqc_report_2}"
+
+
+# perform human read filtration of the reads
+# rule index_genome should create a genome index for mapping
+rule index_genome:
+	input:
+		ref = config['human_genome']
+	output:
+		multiext("resources/Ref/GCA_000001405__29_GRCh38__p14_masked",
+			".1.bt2",	".2.bt2", ".3.bt2", ".4.bt2",
+			".rev.1.bt2", ".rev.2.bt2"),
+	threads: 10
+	log:
+		"logs/Bowtie2/genome_index_log.txt"
+	singularity:
+		"workflow/containers/env-bowtie2.sif"
+	shell:
+		"""
+		bowtie2-build -f --seed 1234 --threads {threads} \
+		{input.ref} resources/Ref/GCA_000001405__29_GRCh38__p14_masked
+		"""
+
+# rule map_reads_pe will return non-human PE reads
+rule map_reads_pe:
+	input:
+		idx = rules.index_genome.output,
+		trimmed_fq1 = lambda wildcards: fq_R1_names_df.loc[wildcards.cohort_with_sample, 'Location_Trim'],
+		trimmed_fq2 = lambda wildcards: fq_R2_names_df.loc[wildcards.cohort_with_sample, 'Location_Trim']
+	output:
+		human_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_human_map.sam",
+		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_Metrics.txt",
+		non_human_fq1 = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.1.fq",
+		non_human_fq2 = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.2.fq"
+	params:
+		unmapped_file_basename = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.fq"
+	threads: 10
+	log:
+		"logs/Bowtie2/{cohort_with_sample}_read_mapping_log.txt"
+	singularity:
+		"workflow/containers/env-bowtie2.sif"
+	shell:
+		"""
+		bowtie2 -q --end-to-end --sensitive \
+		--met-file {output.mapping_metric_reads} --sam-no-qname-trunc \
+		--threads {threads} --seed 7 --time -x resources/Ref/GCA_000001405__29_GRCh38__p14_masked \
+		-1 {input.trimmed_fq1} -2 {input.trimmed_fq2} \
+		-S {output.human_reads} \
+		--un-conc {params.unmapped_file_basename}
+		"""
+
+# rule map_reads_se will return non-human SE reads
+rule map_reads_se:
+	input:
+		idx = rules.index_genome.output,
+		trimmed_fqse = lambda wildcards: fq_SE_names_df.loc[wildcards.cohort_with_sample, 'Location_Trim']
+	output:
+		human_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_human_map.sam",
+		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_Metrics.txt",
+		non_human_fqSE = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.SE.fq"
+	threads: 10
+	log:
+		"logs/Bowtie2/{cohort_with_sample}_read_mapping_log.txt"
+	singularity:
+		"workflow/containers/env-bowtie2.sif"
+	shell:
+		"""
+		bowtie2 -q --end-to-end --sensitive \
+		--met-file {output.mapping_metric_reads} --sam-no-qname-trunc \
+		--threads {threads} --seed 7 --time -x resources/Ref/GCA_000001405__29_GRCh38__p14_masked \
+		-U {input.trimmed_fqse} \
+		-S {output.human_reads} \
+		--un {output.non_human_fqSE}
+		"""
+
+
+# normalization of nonhuman reads
+# rule bbnorm_pe normalizes PE reads
+rule bbnorm_pe:
+	input:
+		mapped_fq1 = lambda wildcards: fq_R1_names_df.loc[wildcards.cohort_mapped_with_sample, 'Location_NonHuman'],
+		mapped_fq2 = lambda wildcards: fq_R2_names_df.loc[wildcards.cohort_mapped_with_sample, 'Location_NonHuman']
+	output:
+		input_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_NON-human_map_input_kmers.png",
+		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_NON-human_map_output_kmers.png",
+		normalized_fq1 = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_norm.1.fq",
+		normalized_fq2 = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_norm.2.fq"
+	threads: 10
+	log:
+		"logs/BBnorm/{cohort_mapped_with_sample}_read_mapping_log.txt"
+	shell:
+		"""
+		apptainer exec workflow/containers/bbtools.sif /bbmap/bbnorm.sh -Xmx40g \
+		in={input.mapped_fq1} in2={input.mapped_fq2} \
+		out={output.normalized_fq1} out2={output.normalized_fq2} \
+		target=80 min=3 threads={threads} \
+		hist={output.input_kmers} histout={output.output_kmers}
+		"""
+
+# rule bbnorm_se normalizes SE reads
+rule bbnorm_se:
+	input:
+		mapped_fqse = lambda wildcards: fq_SE_names_df.loc[wildcards.cohort_with_sample, 'Location_NonHuman']
+	output:
+		input_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_input_kmers.png",
+		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_output_kmers.png",
+		normalized_fqse = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq"
+	threads: 10
+	log:
+		"logs/BBnorm/{cohort_with_sample}_read_mapping_log.txt"
+	shell:
+		"""
+		apptainer exec workflow/containers/bbtools.sif /bbmap/bbnorm.sh -Xmx40g \
+		in={input.mapped_fqse} out={output.normalized_fqse} threads={threads} \
+		target=80 min=3 hist={output.input_kmers} histout={output.output_kmers}
+		"""
+
+
+# filter down to files with 100k reads
+rule filt_100k:
+	input:
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
+			cohort_with_sample = fq_R1_names_df.CohortSample),
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
+			cohort_with_sample = fq_R1_names_df.CohortSample),
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
+			cohort_with_sample = fq_SE_names_df.CohortSample),
+		filtering_script = 'workflow/scripts/snakemake_100k_filt.sh',
+	log:
+		filt_100k_log = 'logs/100k_filt.txt'
+	shell:
+		'bash {input.filtering_script}'
+
+
+### Part 3b: Assembly
+
+# rule assembly_perSample_pe performs per-sample assembly with MetaSPAdes
+rule assembly_perSample_pe:
+	input:
+		'logs/100k_filt.txt'
+	log:
+		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_pe_log.txt",
+			cohort_norm_sample=fq_R1_names_df.CohortSample,allow_missing=True)
+	threads: 20
+	shell:
+		"bash workflow/scripts/snakemake_metaspades_pe.sh {threads}"
+
+# rule assembly_perSample_se performs per-sample assembly with MetaSPAdes
+rule assembly_perSample_se:
+	input:
+		'logs/100k_filt.txt'
+	log:
+		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt",
+			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True)
+	threads: 20
+	shell:
+		"bash workflow/scripts/snakemake_metaspades_se.sh {threads}"
+
+# rule assembly_perCohort_pe performs per-cohort paired end assembly with MEGAHIT
+rule assembly_perCohort_pe:
+	input:
+		'logs/100k_filt.txt'
+	log:
+		expand("logs/MEGAHIT/{cohort_name}_read_assembly_pe_log.txt",
+			cohort_name=fq_R1_names_df.Cohort)
+	threads: 20
+	shell:
+		"bash workflow/scripts/snakemake_megahit_pe.sh {threads}"
+
+# rule assembly_perCohort_se performs per-cohort single end assembly with MEGAHIT
+rule assembly_perCohort_se:
+	input:
+		'logs/100k_filt.txt'
+	log:
+		expand("logs/MEGAHIT/{cohort_name}_read_assembly_se_log.txt",
+			cohort_name=fq_SE_names_df.Cohort)
+	threads: 20
+	shell:
+		"bash workflow/scripts/snakemake_megahit_se.sh {threads}"
+
+
+# second round of human read elimination should remove human contigs
+# should be possible to skip all previous steps
+# rule make_blastndb creates a blast database out of the human genome
+rule make_blastndb:
+	input:
+		human_reference = config['human_genome']
+	output:
+		human_blast_db = multiext(config['human_genome'],
+			".ndb", ".nhr", ".nin", ".njs", ".nog",
+			".nos", ".not", ".nsq", ".ntf", ".nto")
+	log:
+		"logs/blastn_human_db.log"
+	singularity:
+		"workflow/containers/mag_assembly_qc.sif"
+	shell:
+		"makeblastdb -dbtype nucl -in {input.human_reference} -input_type fasta -parse_seqids"
+
+# rule blastn_perSample removes human contigs from the per-sample assemblies
+rule blastn_perSample:
+	input:
+		rules.make_blastndb.output.human_blast_db,
+		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_pe_log.txt",
+			cohort_norm_sample=fq_R1_names_df.CohortSample,allow_missing=True),
+		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt",
+			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True)
+	log:
+		"logs/AssemblyNonHuman_recordSample.txt"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_human_blast_sample.sh {threads} {log}"
+
+# rule blastn_perCohort removes human contigs from the per-cohort assemblies
+rule blastn_perCohort:
+	input:
+		rules.make_blastndb.output.human_blast_db,
+		expand("logs/MEGAHIT/{cohort_name}_read_assembly_pe_log.txt",
+			cohort_name=fq_R1_names_df.Cohort),
+		expand("logs/MEGAHIT/{cohort_name}_read_assembly_se_log.txt",
+			cohort_name=fq_SE_names_df.Cohort)
+	log:
+		"logs/AssemblyNonHuman_recordCohort.txt"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_human_blast_cohort.sh {threads} {log}"
+
+
+# binning contigs into MAGs
+# rule binning_perSample bins the contigs into MAGs for the per-sample assembly
+rule binning_perSample:
+	input:
+		rules.blastn_perSample.log
+	log:
+		"logs/MAGs/PerSample/metabat.log"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_metabat_sample.sh {threads}"
+
+# rule binning_perCohort bins the contigs into MAGs for the per-cohort assembly
+rule binning_perCohort:
+	input:
+		rules.blastn_perCohort.log
+	log:
+		"logs/MAGs/PerCohort/metabat.log"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_metabat_cohort.sh {threads}"
+
+
+# quality checking of the assembled MAGs
+# rule mag_qc_perSample checks the quality of the per-sample MAG assemblies
+rule mag_qc_perSample:
+	input:
+		rules.binning_perSample.log
+	log:
+		"logs/MAG_QC/PerSample/CheckM.log"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_checkm_sample.sh {threads}"
+
+# rule mag_qc_perCohort checks the quality of the per-cohort MAG assemblies
+rule mag_qc_perCohort:
+	input:
+		rules.binning_perCohort.log
+	log:
+		"logs/MAG_QC/PerCohort/CheckM.log"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_checkm_cohort.sh {threads}"
+
+
+# possible future pipeline update: MAG dereplication step with drep
+
+
+### Part 3c: Taxonomic profiling & BGC prediction
+
+# taxonomic assignment
+# rule taxa_perSample should use Metaphlan to assign MAGs to taxa in the per-sample assemblies
+rule taxa_perCohort_se:
+	input:
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
+			cohort_with_sample = fq_SE_names_df.CohortSample)
+	log:
+		"logs/Taxonomy/PerCohort/metaphlan_se.log"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_metaphlan_cohort_se.sh {threads}"
+
+# rule taxa_perCohort should use Metaphlan to assign MAGs to taxa in the per-cohort assemblies
+rule taxa_perCohort_pe:
+	input:
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
+			cohort_with_sample = fq_R1_names_df.CohortSample),
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
+			cohort_with_sample = fq_R1_names_df.CohortSample),
+	log:
+		"logs/Taxonomy/PerCohort/metaphlan_pe.log"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_metaphlan_cohort_pe.sh {threads}"
+
+
+# BGC predictions
+# rule gecco_perSample should run BGC analysis using GECCO for the per-sample assemblies
+rule gecco_perSample:
+	input:
+		rules.blastn_perSample.log
+	log:
+		"logs/BGCs/PerSample/gecco.log"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_gecco_sample.sh {threads}"
+
+# rule gecco_perCohort should run BGC analysis using GECCO for the per-cohort assemblies
+rule gecco_perCohort:
+	input:
+		rules.blastn_perCohort.log
+	log:
+		"logs/BGCs/PerCohort/gecco.log"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_gecco_cohort.sh {threads}"
+
+
+# rule antismash_perSample should run BGC analysis using AntiSMASH for the per-sample assemblies
+rule antismash_perSample:
+	input:
+		rules.blastn_perSample.log
+	log:
+		"logs/BGCs/PerSample/antismash.log"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_antismash_sample.sh {threads}"
+
+# rule antismash_perCohort should run BGC analysis using AntiSMASH for the per-cohort assemblies
+rule antismash_perCohort:
+	input:
+		rules.blastn_perCohort.log
+	log:
+		"logs/BGCs/PerCohort/antismash.log"
+	threads: 5
+	shell:
+		"bash workflow/scripts/snakemake_antismash_cohort.sh {threads}"
