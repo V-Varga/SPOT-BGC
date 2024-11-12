@@ -1,5 +1,3 @@
-#raw_samples: 'config/sample_info.txt'
-
 human_genome: 'resources/Ref/GCA_000001405.29_GRCh38.p14_genomic_hardMask.fasta'
 
 human_genome_original: 'resources/Ref/GCA_000001405.29_GRCh38.p14_genomic.fna'
