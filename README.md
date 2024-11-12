@@ -62,19 +62,18 @@ mkdir containers
 cd containers/
 # then build the containers with Apptainer
 # the read QC container
-apptainer build --build-arg ENV_FILE=../envs/env-QualityChecking.yml env-QualityChecking.sif ../Scripts/conda_environment_args_ubuntu.def
-snakemake --use-singularity
+apptainer build --build-arg ENV_FILE=../envs/env-QualityChecking.yml env-QualityChecking.sif ../scripts/conda_environment_args_ubuntu.def
 # read trimming container
-apptainer build --build-arg ENV_FILE=../envs/env-trimmomatic.yml env-trimmomatic.sif ../Scripts/conda_environment_args_ubuntu.def
+apptainer build --build-arg ENV_FILE=../envs/env-trimmomatic.yml env-trimmomatic.sif ../scripts/conda_environment_args_ubuntu.def
 # human read removal container
-apptainer build --build-arg ENV_FILE=../envs/env-bowtie2.yml env-bowtie2.sif ../Scripts/conda_environment_args_ubuntu.def
+apptainer build --build-arg ENV_FILE=../envs/env-bowtie2.yml env-bowtie2.sif ../scripts/conda_environment_args_ubuntu.def
 # normalization via BBTools container
 apptainer build --build-arg ENV_FILE=../envs/java-11.yml bbtools.sif ../scripts/conda_environment_args_ubuntu-bbtools.def
 apptainer exec bbtools.sif /bbmap/stats.sh -h
 # assembly container
-apptainer build --build-arg ENV_FILE=../envs/metagenome_assembly.yml metagenome_assembly.sif ../Scripts/conda_environment_args_ubuntu.def
+apptainer build --build-arg ENV_FILE=../envs/metagenome_assembly.yml metagenome_assembly.sif ../scripts/conda_environment_args_ubuntu.def
 # QC of MAGs
-apptainer build --build-arg ENV_FILE=../envs/mag_assembly_qc.yml mag_assembly_qc.sif ../Scripts/conda_environment_args_ubuntu.def
+apptainer build --build-arg ENV_FILE=../envs/mag_assembly_qc.yml mag_assembly_qc.sif ../scripts/conda_environment_args_ubuntu.def
 # taxonomy with MetaPhlAn
 apptainer build --build-arg ENV_FILE=../envs/env-metaphlan.yml env-metaphlan.sif ../scripts/conda_environment_args_ubuntu-metaphlan.def
 # BGCs with AntiSMASH
