@@ -69,7 +69,6 @@ apptainer build --build-arg ENV_FILE=../envs/env-trimmomatic.yml env-trimmomatic
 apptainer build --build-arg ENV_FILE=../envs/env-bowtie2.yml env-bowtie2.sif ../scripts/conda_environment_args_ubuntu.def
 # normalization via BBTools container
 apptainer build --build-arg ENV_FILE=../envs/java-11.yml bbtools.sif ../scripts/conda_environment_args_ubuntu-bbtools.def
-apptainer exec bbtools.sif /bbmap/stats.sh -h
 # assembly container
 apptainer build --build-arg ENV_FILE=../envs/metagenome_assembly.yml metagenome_assembly.sif ../scripts/conda_environment_args_ubuntu.def
 # QC of MAGs
