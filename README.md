@@ -39,7 +39,7 @@ The SPOT-BGC pipeline performs the following on input metagenomic FASTQ reads:
 7. Human contig elimination (sanity check): BLASTN
 8. Binning of contigs into MAGs: MetaBAT
 9. Quality assessment of the MAGs: CheckM
-10. Taxonomic assignments of assemblies: MetaPhlAn
+10. Taxonomic assignments of normalized FASTQ reads: MetaPhlAn
 11. BGC predictions: GECCO, AntiSMASH
 
 
