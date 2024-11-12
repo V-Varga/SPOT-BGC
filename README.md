@@ -75,6 +75,7 @@ apptainer build --build-arg ENV_FILE=../envs/metagenome_assembly.yml metagenome_
 apptainer build --build-arg ENV_FILE=../envs/mag_assembly_qc.yml mag_assembly_qc.sif ../scripts/conda_environment_args_ubuntu.def
 # taxonomy with MetaPhlAn
 apptainer build --build-arg ENV_FILE=../envs/env-metaphlan.yml env-metaphlan.sif ../scripts/conda_environment_args_ubuntu-metaphlan.def
+# note that the MetaPhlAn container will take a long time to build
 # BGCs with AntiSMASH
 apptainer build --build-arg ENV_FILE=../envs/env-antismash.yml env-antismash.sif ../scripts/conda_environment_args_ubuntu-antismash.def
 # BGCs with GECCO
