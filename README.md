@@ -52,7 +52,7 @@ The primary dependencies of the SPOT-BGC pipeline are:
 
 ## Running SPOT-BGC
 
-Owing to a temporary bug in Snakemake at the time of this pipeline's creation, the programs used must be run out of containers, rather than via `conda` environments [Ref](https://github.com/snakemake/snakemake/issues/3163). All files necessary to generate the containers are included in this repository. 
+Owing to a temporary bug in Snakemake at the time of this pipeline's creation, the programs used must be run out of containers, rather than via `conda` environments ([see source here](https://github.com/snakemake/snakemake/issues/3163)). All files necessary to generate the containers are included in this repository. 
 
 To build the containers with Apptainer, run the following code from the `workflow/` directory: 
 
