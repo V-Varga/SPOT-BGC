@@ -20,6 +20,16 @@ This pipeline can process both paired-end (PE) and single-end (SE) FASTQ input. 
 
 ### Pipeline status
 
+### Current published version
+
+First major update, 2025.01.XX: Build 2.0.0
+ - Kraken2 has replaced BLASTN for the human contig elimination step, to improve speed
+ - A safety measure has been added to the per-sample MetaSPAdes/SPAdes assembly: If a sample does not successfully assembly within 3 days, the process will terminate & MEGAHIT will be used to assemble the sample, instead
+ - Taxonomic profiling is now done with CheckM
+ - The SPOT-BGC pipeline has been tested in a SLURM HPC environment
+
+### Logs of earlier updates
+
 Initial publication, 2024.11.12: Build 1.0.0-beta
  - The SPOT-BGC pipeline is functional, with the human genome as the reference genome. 
  - Note that while it has been successfully run for the analysis it was designed for, extensive testing of the pipeline has not been carried out.
@@ -35,12 +45,12 @@ The SPOT-BGC pipeline performs the following on input metagenomic FASTQ reads:
 3. Human read filtration by mapping to the human genome: Bowtie2
 4. Normalization of read counts: BBNorm
 5. For the per-sample assemblies, sample IDs with <100k reads remaining are filtered out
-6. Assembly: per-sample with SPAdes, per-cohort with MEGAHIT
-7. Human contig elimination (sanity check): BLASTN
-8. Binning of contigs into MAGs: MetaBAT
-9. Quality assessment of the MAGs: CheckM
-10. Taxonomic assignments of normalized FASTQ reads: MetaPhlAn
-11. BGC predictions: GECCO, AntiSMASH
+6. Assembly: per-sample with (Meta)SPAdes, per-cohort with MEGAHIT (Note that if the complexity of a file causes MetaSPAdes to be unable to process it, MEGAHIT will be used, instead.)
+8. Human contig elimination (sanity check): Kraken2
+9. Binning of contigs into MAGs: MetaBAT
+10. Quality assessment of the MAGs: CheckM
+11. Taxonomic assignments of the MAGs: CheckM
+12. BGC predictions: GECCO, AntiSMASH
 
 
 ## Dependencies
@@ -71,11 +81,12 @@ apptainer build --build-arg ENV_FILE=../envs/env-bowtie2.yml env-bowtie2.sif ../
 apptainer build --build-arg ENV_FILE=../envs/java-11.yml bbtools.sif ../scripts/conda_environment_args_ubuntu-bbtools.def
 # assembly container
 apptainer build --build-arg ENV_FILE=../envs/metagenome_assembly.yml metagenome_assembly.sif ../scripts/conda_environment_args_ubuntu.def
-# QC of MAGs
+# human contig elimination with Kraken2
+apptainer build --build-arg ENV_FILE=../envs/env-kraken.yml --build-arg REF_FILE=../../resources/Ref/{REFERENCE} env-kraken2db.sif ../scripts/conda_environment_args_ubuntu-kraken2db.def
+# replace the {REFERENCE} placeholder with the name of your reference file
+# note that this container will take some time to assemble, owing to the need to download & install databases
+# QC of MAGs & taxonomic profiling
 apptainer build --build-arg ENV_FILE=../envs/mag_assembly_qc.yml mag_assembly_qc.sif ../scripts/conda_environment_args_ubuntu.def
-# taxonomy with MetaPhlAn
-apptainer build --build-arg ENV_FILE=../envs/env-metaphlan.yml env-metaphlan.sif ../scripts/conda_environment_args_ubuntu-metaphlan.def
-# note that the MetaPhlAn container will take a long time to build
 # BGCs with AntiSMASH
 apptainer build --build-arg ENV_FILE=../envs/env-antismash.yml env-antismash.sif ../scripts/conda_environment_args_ubuntu-antismash.def
 # BGCs with GECCO
