@@ -7,3 +7,10 @@ workflow/containers/env-QualityChecking.sif
 workflow/containers/env-trimmomatic.sif
 workflow/containers/mag_assembly_qc.sif
 workflow/containers/metagenome_assembly.sif
+results/
+resources/
+logs/
+.snakemake/
+.config/
+.cache/
+.java/
