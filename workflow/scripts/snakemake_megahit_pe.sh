@@ -24,22 +24,38 @@
 thread_count=$1;
 
 
+# create the results directory if it doesn't exist
+mkdir -p results/Assembly/PerCohort; 
+
+# get SE directory names
+ls results/DataNonHuman/BBNorm_Reads/*/*.1.fq | while read file; do
+	# find the SE file cohorts
+	parentname="$(basename "$(dirname "$file")")"; # this gets the parent/cohort directory name
+	# write the paths to the input firectories to a file
+	echo "results/DataNonHuman/BBNorm_Reads/${parentname}/" >> results/Assembly/PerCohort/MEGAHIT_Tracking_PE.txt;
+done;
+
+
 ### Running MEGAHIT
 # run these in a while loop
-ls results/DataNonHuman/BBNorm_Reads/*/*.1.fq | while read file; do
+while read line; do
 	# designate variables
-	parentname="$(basename "$(dirname "$file")")"; # this gets the parent/cohort directory name
+	parentname="$(echo "$line" | cut -d "/" -f 4)"; # this gets the parent/cohort directory name
 	mkdir -p results/Assembly/PerCohort; # create the directory if it doesn't exist
 	# identify files
 	# ref: https://merenlab.org/tutorials/assembly-based-metagenomics/
-	R1s=`ls results/DataNonHuman/BBNorm_Reads/${parentname}/*.1.fq | python -c 'import sys; print(",".join([x.strip() for x in sys.stdin.readlines()]))'`;
-	R2s=`ls results/DataNonHuman/BBNorm_Reads/${parentname}/*.2.fq | python -c 'import sys; print(",".join([x.strip() for x in sys.stdin.readlines()]))'`;
+	R1s=`ls ${parentname}*.1.fq | python -c 'import sys; print(",".join([x.strip() for x in sys.stdin.readlines()]))'`;
+	R2s=`ls ${parentname}*.2.fq | python -c 'import sys; print(",".join([x.strip() for x in sys.stdin.readlines()]))'`;
 	# now run the program
 	apptainer exec workflow/containers/metagenome_assembly.sif megahit -1 $R1s -2 $R2s -t $1 \
 	-o results/Assembly/PerCohort/${parentname}/;
 	# finally copy the primary output file to a more specific filename
 	cp results/Assembly/PerCohort/${parentname}/final.contigs.fa results/Assembly/PerCohort/${parentname}/${parentname}_final.contigs.fa;
-done;
+done < results/Assembly/PerCohort/MEGAHIT_Tracking_PE.txt;
+
+
+# Notification of completion
+echo "MEGAHIT PE run completed." > logs/MEGAHIT/MEGAHIT_PE_completion.txt
 
 
 # Refs: 
