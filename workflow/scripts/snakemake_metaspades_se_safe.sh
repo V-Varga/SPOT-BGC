@@ -102,6 +102,10 @@ if [ -s Complex_files_SE.txt ]; then
 fi;
 
 
+# Notification of completion
+echo "MetaSPAdes SE run completed." > logs/MetaSPAdes/MetaSPAdes_SE_completion.txt
+
+
 # Refs: 
 # Metaspades manual: https://home.cc.umanitoba.ca/~psgendb/doc/spades/manual.html
 # Usage: spades.py [options] -o <output_dir>

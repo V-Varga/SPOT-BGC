@@ -106,6 +106,10 @@ if [ -s results/Assembly/PerSample/Complex_files_PE.txt ]; then
 fi;
 
 
+# Notification of completion
+echo "MetaSPAdes PE run completed." > logs/MetaSPAdes/MetaSPAdes_PE_completion.txt
+
+
 # Refs: 
 # Metaspades manual: https://home.cc.umanitoba.ca/~psgendb/doc/spades/manual.html
 # Usage: spades.py [options] -o <output_dir>
