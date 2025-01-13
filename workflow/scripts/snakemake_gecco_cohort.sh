@@ -27,7 +27,7 @@ thread_count=$1;
 
 ### Running GECCO
 # run these in a while loop
-ls results/AssemblyNonHuman/PerCohort/*/*_final.contigs_nonHuman.fasta | while read file; do
+ls results/AssemblyNonHuman/PerCohort/*/*_minContig1500.1.fa | while read file; do
 	# first designate variables & directories
 	parentname="$(basename "$(dirname "$file")")"; # this gets the parent/cohort directory name
 	mkdir -p results/BGCs/GECCO/PerCohort/${parentname}; #create an output directory
