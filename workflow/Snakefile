@@ -1,9 +1,11 @@
 # Snakefile for SPOT-BGC workflow pipeline
 
 # Author: Vi Varga
-# Last edit date: 2024.11.10
+# Last edit date: 2025.01.13
 
-# developed in Sankemake 8.25.2
+# SPOT-BGC v.2.0.0
+# written in PyCharm Community Edition version 2024.3.1.1
+# developed using Snakemake version 8.27.1
 
 
 ## Part 1: Setup
@@ -87,16 +89,15 @@ rule all:
 			cohort_name=fq_R1_names_df.Cohort),
 		expand("logs/MEGAHIT/{cohort_name}_read_assembly_se_log.txt",
 			cohort_name=fq_SE_names_df.Cohort),
-		multiext(config['human_genome'],
-			 ".ndb", ".nhr", ".nin", ".not", ".nsq", ".ntf", ".nto"),
+		"logs/AssemblyNonHuman_cp_db.txt",
 		"logs/AssemblyNonHuman_recordSample.txt",
 		"logs/AssemblyNonHuman_recordCohort.txt",
 		"logs/MAGs/PerSample/metabat.log",
 		"logs/MAGs/PerCohort/metabat.log",
 		"logs/MAG_QC/PerSample/CheckM.log",
 		"logs/MAG_QC/PerCohort/CheckM.log",
-		"logs/Taxonomy/PerCohort/metaphlan_se.log",
-		"logs/Taxonomy/PerCohort/metaphlan_pe.log",
+		"logs/Taxonomy/PerCohort/checkm_taxa_cohort.log",
+		"logs/Taxonomy/PerSample/checkm_taxa_sample.log",
 		"logs/BGCs/PerSample/gecco.log",
 		"logs/BGCs/PerCohort/gecco.log",
 		"logs/BGCs/PerSample/antismash.log",
@@ -362,7 +363,6 @@ rule filt_100k:
 
 
 ### Part 3b: Assembly
-
 # rule assembly_perSample_pe performs per-sample assembly with MetaSPAdes
 rule assembly_perSample_pe:
 	input:
@@ -372,7 +372,7 @@ rule assembly_perSample_pe:
 			cohort_norm_sample=fq_R1_names_df.CohortSample,allow_missing=True)
 	threads: 20
 	shell:
-		"bash workflow/scripts/snakemake_metaspades_pe.sh {threads}"
+		"bash workflow/scripts/snakemake_metaspades_pe_safe.sh {threads}"
 
 # rule assembly_perSample_se performs per-sample assembly with MetaSPAdes
 rule assembly_perSample_se:
@@ -383,7 +383,7 @@ rule assembly_perSample_se:
 			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True)
 	threads: 20
 	shell:
-		"bash workflow/scripts/snakemake_metaspades_se.sh {threads}"
+		"bash workflow/scripts/snakemake_metaspades_se_safe.sh {threads}"
 
 # rule assembly_perCohort_pe performs per-cohort paired end assembly with MEGAHIT
 rule assembly_perCohort_pe:
@@ -410,55 +410,38 @@ rule assembly_perCohort_se:
 
 # second round of human read elimination should remove human contigs
 # should be possible to skip all previous steps
-# rule make_blastndb creates a blast database out of the human genome
-rule make_blastndb:
-	input:
-		human_reference = config['human_genome']
-	output:
-		human_blast_db = multiext(config['human_genome'],
-			".ndb", ".nhr", ".nin", ".njs", ".nog",
-			".nos", ".not", ".nsq", ".ntf", ".nto")
+rule kraken_copyDB:
 	log:
-		"logs/blastn_human_db.log"
-	singularity:
-		"workflow/containers/mag_assembly_qc.sif"
+		"logs/AssemblyNonHuman_cp_db.txt"
 	shell:
-		"makeblastdb -dbtype nucl -in {input.human_reference} -input_type fasta -parse_seqids"
+		"apptainer exec workflow/containers/env-kraken2db.sif cp -r /kraken2_human_db/ resources/"
 
-# rule blastn_perSample removes human contigs from the per-sample assemblies
-rule blastn_perSample:
+# rule kraken_perSample removes human contigs from the per-sample assemblies
+rule kraken_perSample:
 	input:
-		rules.make_blastndb.output.human_blast_db,
-		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_pe_log.txt",
-			cohort_norm_sample=fq_R1_names_df.CohortSample,allow_missing=True),
-		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt",
-			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True)
+		rules.kraken_copyDB.log
 	log:
 		"logs/AssemblyNonHuman_recordSample.txt"
-	threads: 5
+	threads: 10
 	shell:
-		"bash workflow/scripts/snakemake_human_blast_sample.sh {threads} {log}"
+		"bash workflow/scripts/snakemake_human_kraken_sample.sh {threads}"
 
-# rule blastn_perCohort removes human contigs from the per-cohort assemblies
-rule blastn_perCohort:
+# rule kraken_perCohort removes human contigs from the per-cohort assemblies
+rule kraken_perCohort:
 	input:
-		rules.make_blastndb.output.human_blast_db,
-		expand("logs/MEGAHIT/{cohort_name}_read_assembly_pe_log.txt",
-			cohort_name=fq_R1_names_df.Cohort),
-		expand("logs/MEGAHIT/{cohort_name}_read_assembly_se_log.txt",
-			cohort_name=fq_SE_names_df.Cohort)
+		rules.kraken_copyDB.log
 	log:
 		"logs/AssemblyNonHuman_recordCohort.txt"
-	threads: 5
+	threads: 10
 	shell:
-		"bash workflow/scripts/snakemake_human_blast_cohort.sh {threads} {log}"
+		"bash workflow/scripts/snakemake_human_kraken_cohort.sh {threads}"
 
 
 # binning contigs into MAGs
 # rule binning_perSample bins the contigs into MAGs for the per-sample assembly
 rule binning_perSample:
 	input:
-		rules.blastn_perSample.log
+		rules.kraken_perSample.log
 	log:
 		"logs/MAGs/PerSample/metabat.log"
 	threads: 5
@@ -468,7 +451,7 @@ rule binning_perSample:
 # rule binning_perCohort bins the contigs into MAGs for the per-cohort assembly
 rule binning_perCohort:
 	input:
-		rules.blastn_perCohort.log
+		rules.kraken_perCohort.log
 	log:
 		"logs/MAGs/PerCohort/metabat.log"
 	threads: 5
@@ -502,38 +485,33 @@ rule mag_qc_perCohort:
 
 
 ### Part 3c: Taxonomic profiling & BGC prediction
-
 # taxonomic assignment
 # rule taxa_perSample should use Metaphlan to assign MAGs to taxa in the per-sample assemblies
-rule taxa_perCohort_se:
+rule taxa_perCohort:
 	input:
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
-			cohort_with_sample = fq_SE_names_df.CohortSample)
+		rules.binning_perCohort.log
 	log:
-		"logs/Taxonomy/PerCohort/metaphlan_se.log"
+		"logs/Taxonomy/PerCohort/checkm_taxa_cohort.log"
 	threads: 5
 	shell:
-		"bash workflow/scripts/snakemake_metaphlan_cohort_se.sh {threads}"
+		"bash workflow/scripts/snakemake_checkm_taxa_cohort.sh {threads}"
 
 # rule taxa_perCohort should use Metaphlan to assign MAGs to taxa in the per-cohort assemblies
-rule taxa_perCohort_pe:
+rule taxa_perSample:
 	input:
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
-			cohort_with_sample = fq_R1_names_df.CohortSample),
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
-			cohort_with_sample = fq_R1_names_df.CohortSample),
+		rules.binning_perSample.log
 	log:
-		"logs/Taxonomy/PerCohort/metaphlan_pe.log"
+		"logs/Taxonomy/PerSample/checkm_taxa_sample.log"
 	threads: 5
 	shell:
-		"bash workflow/scripts/snakemake_metaphlan_cohort_pe.sh {threads}"
+		"bash workflow/scripts/snakemake_checkm_taxa_sample.sh {threads}"
 
 
 # BGC predictions
 # rule gecco_perSample should run BGC analysis using GECCO for the per-sample assemblies
 rule gecco_perSample:
 	input:
-		rules.blastn_perSample.log
+		rules.kraken_perSample.log
 	log:
 		"logs/BGCs/PerSample/gecco.log"
 	threads: 5
@@ -543,7 +521,7 @@ rule gecco_perSample:
 # rule gecco_perCohort should run BGC analysis using GECCO for the per-cohort assemblies
 rule gecco_perCohort:
 	input:
-		rules.blastn_perCohort.log
+		rules.kraken_perCohort.log
 	log:
 		"logs/BGCs/PerCohort/gecco.log"
 	threads: 5
@@ -554,7 +532,7 @@ rule gecco_perCohort:
 # rule antismash_perSample should run BGC analysis using AntiSMASH for the per-sample assemblies
 rule antismash_perSample:
 	input:
-		rules.blastn_perSample.log
+		rules.kraken_perSample.log
 	log:
 		"logs/BGCs/PerSample/antismash.log"
 	threads: 5
@@ -564,7 +542,7 @@ rule antismash_perSample:
 # rule antismash_perCohort should run BGC analysis using AntiSMASH for the per-cohort assemblies
 rule antismash_perCohort:
 	input:
-		rules.blastn_perCohort.log
+		rules.kraken_perCohort.log
 	log:
 		"logs/BGCs/PerCohort/antismash.log"
 	threads: 5
