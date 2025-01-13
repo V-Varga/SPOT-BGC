@@ -97,7 +97,7 @@ if [ -s Complex_files_SE.txt ]; then
 		-t $1 -o results/Assembly/PerSample/${parentname}/${file_base_id}/;
 		# finally copy the primary output file to a more specific filename
 		cp results/Assembly/PerSample/${parentname}/${file_base_id}/final.contigs.fa \
-		results/Assembly/PerSample/${parentname}/${file_base_id}/${file_base_id}_final.contigs.fa;
+		results/Assembly/PerSample/${parentname}/${file_base_id}/${file_base_id}_final.contigs.fasta;
 	done < results/Assembly/PerSample/Complex_files_SE.txt;
 fi;
 
