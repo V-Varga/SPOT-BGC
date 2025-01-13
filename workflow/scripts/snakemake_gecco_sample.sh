@@ -27,7 +27,7 @@ thread_count=$1;
 
 ### Running GECCO
 # run these in a while loop
-ls results/AssemblyNonHuman/PerSample/*/*/*_scaffolds_nonHuman.fasta | while read file; do
+ls results/AssemblyNonHuman/PerSample/*/*/*_minContig1500.1.fa | while read file; do
 	# first designate variables & directories
 	parentname="$(dirname "$(dirname "$file")")"; 
 	grandparent_dir="${parentname##*/}"; # this gets the grandparent/cohort directory name
