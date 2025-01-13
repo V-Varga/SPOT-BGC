@@ -83,12 +83,16 @@ rule all:
 		'logs/100k_filt.txt',
 		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_pe_log.txt",
 			cohort_norm_sample=fq_R1_names_df.CohortSample, allow_missing=True),
+		"logs/MetaSPAdes/MetaSPAdes_PE_completion.txt",
 		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt",
 			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True),
+		"logs/MetaSPAdes/MetaSPAdes_PE_completion.txt",
 		expand("logs/MEGAHIT/{cohort_name}_read_assembly_pe_log.txt",
 			cohort_name=fq_R1_names_df.Cohort),
+		"logs/MEGAHIT/MEGAHIT_PE_completion.txt",
 		expand("logs/MEGAHIT/{cohort_name}_read_assembly_se_log.txt",
 			cohort_name=fq_SE_names_df.Cohort),
+		"logs/MEGAHIT/MEGAHIT_SE_completion.txt",
 		"logs/AssemblyNonHuman_cp_db.txt",
 		"logs/AssemblyNonHuman_recordSample.txt",
 		"logs/AssemblyNonHuman_recordCohort.txt",
@@ -367,6 +371,8 @@ rule filt_100k:
 rule assembly_perSample_pe:
 	input:
 		'logs/100k_filt.txt'
+	output:
+		'logs/MetaSPAdes/MetaSPAdes_PE_completion.txt'
 	log:
 		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_pe_log.txt",
 			cohort_norm_sample=fq_R1_names_df.CohortSample,allow_missing=True)
@@ -378,6 +384,8 @@ rule assembly_perSample_pe:
 rule assembly_perSample_se:
 	input:
 		'logs/100k_filt.txt'
+	output:
+		'logs/MetaSPAdes/MetaSPAdes_SE_completion.txt'
 	log:
 		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt",
 			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True)
@@ -389,6 +397,8 @@ rule assembly_perSample_se:
 rule assembly_perCohort_pe:
 	input:
 		'logs/100k_filt.txt'
+	output:
+		'logs/MEGAHIT/MEGAHIT_PE_completion.txt'
 	log:
 		expand("logs/MEGAHIT/{cohort_name}_read_assembly_pe_log.txt",
 			cohort_name=fq_R1_names_df.Cohort)
@@ -400,6 +410,8 @@ rule assembly_perCohort_pe:
 rule assembly_perCohort_se:
 	input:
 		'logs/100k_filt.txt'
+	output:
+		'logs/MEGAHIT/MEGAHIT_SE_completion.txt'
 	log:
 		expand("logs/MEGAHIT/{cohort_name}_read_assembly_se_log.txt",
 			cohort_name=fq_SE_names_df.Cohort)
@@ -419,7 +431,9 @@ rule kraken_copyDB:
 # rule kraken_perSample removes human contigs from the per-sample assemblies
 rule kraken_perSample:
 	input:
-		rules.kraken_copyDB.log
+		rules.kraken_copyDB.log,
+		rules.assembly_perSample_pe.output,
+		rules.assembly_perSample_se.output
 	log:
 		"logs/AssemblyNonHuman_recordSample.txt"
 	threads: 10
@@ -429,7 +443,9 @@ rule kraken_perSample:
 # rule kraken_perCohort removes human contigs from the per-cohort assemblies
 rule kraken_perCohort:
 	input:
-		rules.kraken_copyDB.log
+		rules.kraken_copyDB.log,
+		rules.assembly_perCohort_pe.output,
+		rules.assembly_perCohort_se.output
 	log:
 		"logs/AssemblyNonHuman_recordCohort.txt"
 	threads: 10
@@ -511,7 +527,7 @@ rule taxa_perSample:
 # rule gecco_perSample should run BGC analysis using GECCO for the per-sample assemblies
 rule gecco_perSample:
 	input:
-		rules.kraken_perSample.log
+		rules.binning_perSample.log
 	log:
 		"logs/BGCs/PerSample/gecco.log"
 	threads: 5
@@ -521,7 +537,7 @@ rule gecco_perSample:
 # rule gecco_perCohort should run BGC analysis using GECCO for the per-cohort assemblies
 rule gecco_perCohort:
 	input:
-		rules.kraken_perCohort.log
+		rules.binning_perSample.log
 	log:
 		"logs/BGCs/PerCohort/gecco.log"
 	threads: 5
@@ -532,7 +548,7 @@ rule gecco_perCohort:
 # rule antismash_perSample should run BGC analysis using AntiSMASH for the per-sample assemblies
 rule antismash_perSample:
 	input:
-		rules.kraken_perSample.log
+		rules.binning_perSample.log
 	log:
 		"logs/BGCs/PerSample/antismash.log"
 	threads: 5
@@ -542,7 +558,7 @@ rule antismash_perSample:
 # rule antismash_perCohort should run BGC analysis using AntiSMASH for the per-cohort assemblies
 rule antismash_perCohort:
 	input:
-		rules.kraken_perCohort.log
+		rules.binning_perSample.log
 	log:
 		"logs/BGCs/PerCohort/antismash.log"
 	threads: 5
