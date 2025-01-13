@@ -27,13 +27,14 @@ thread_count=$1;
 
 ### Running MetaBAT
 # run these in a while loop
-ls results/AssemblyNonHuman/PerSample/*/*/*_scaffolds_nonHuman.fasta | while read file; do
+ls results/AssemblyNonHuman/PerSample/*/[[:upper:]]*/*_nonHuman.fasta | while read file; do
 	# first designate variables & directories
 	parentname="$(dirname "$(dirname "$file")")"; 
 	grandparent_dir="${parentname##*/}"; # this gets the grandparent/cohort directory name
 	full_file="${file##*/}"; #this line removes the path before the file name
 	file_base="${full_file%.*}"; #this line removes the file extension .fasta
-	file_base_id="${file_base%_scaffolds_nonHuman}"; #this removes the "_scaffolds_nonHuman" substring
+ 	# ref: https://unix.stackexchange.com/questions/53310/splitting-string-by-the-first-occurrence-of-a-delimiter
+	file_base_id="$( cut -d "_" -f 1 <<< "$file_base" )"; #this selects only the sample ID from the name
 	mkdir -p results/MAGs/PerSample/${grandparent_dir}/${file_base_id}; #create an output directory
 	# now run MetaBAT
 	apptainer exec workflow/containers/metagenome_assembly.sif metabat2 -i $file -m 1500 -t $thread_count \
