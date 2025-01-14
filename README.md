@@ -29,10 +29,10 @@ First major update, 2025.01.14: Build 2.0.0
 
 ### Ongoing work for future versions
 
-Minor update, 2025.01.XX (date tentative): 2.1.0
+Minor update, 2025.01.XX (date tentative): Build 2.1.0
  - Ensuring environmental compliance & functionality on SLURM HPCs
 
-Additional planned update(s) (no date decided): 
+Additional potential update(s) (no date decided): 
  - Ensuring only 1 per-cohort assembly is built, even in cases where a cohort contains both SE and PE reads
  - Inclusion of initial setup `bash` commands & Python script in pipeline
 
