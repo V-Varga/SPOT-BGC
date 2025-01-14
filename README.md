@@ -24,7 +24,7 @@ This pipeline can process both paired-end (PE) and single-end (SE) FASTQ input. 
 
 First major update, 2025.01.XX: Build 2.0.0
  - Kraken2 has replaced BLASTN for the human contig elimination step, to improve speed
- - A safety measure has been added to the per-sample MetaSPAdes/SPAdes assembly: If a sample does not successfully assembly within 3 days, the process will terminate & MEGAHIT will be used to assemble the sample, instead
+ - A safety measure has been added to the per-sample MetaSPAdes/SPAdes assembly: If a sample does not successfully assembly within 6 hours, the process will terminate & MEGAHIT will be used to assemble the sample, instead
  - Taxonomic profiling is now done with CheckM
  - The SPOT-BGC pipeline has been tested in a SLURM HPC environment
 
