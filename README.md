@@ -6,7 +6,7 @@ _A Snakemake Pipeline to Output meTagenomics-derived Biosynthetic Gene Clusters_
 
 Author: Vi Varga
 
-Last Major Update: 2024.11.12
+Last Major Update: 2025.01.14
 
 
 ## Pipeline summary & status
@@ -22,11 +22,19 @@ This pipeline can process both paired-end (PE) and single-end (SE) FASTQ input. 
 
 ### Current published version
 
-First major update, 2025.01.XX: Build 2.0.0
+First major update, 2025.01.14: Build 2.0.0
  - Kraken2 has replaced BLASTN for the human contig elimination step, to improve speed
  - A safety measure has been added to the per-sample MetaSPAdes/SPAdes assembly: If a sample does not successfully assembly within 6 hours, the process will terminate & MEGAHIT will be used to assemble the sample, instead
  - Taxonomic profiling is now done with CheckM
- - The SPOT-BGC pipeline has been tested in a SLURM HPC environment
+
+### Ongoing work for future versions
+
+Minor update, 2025.01.XX (date tentative): 2.1.0
+ - Ensuring environmental compliance & functionality on SLURM HPCs
+
+Additional planned update(s) (no date decided): 
+ - Ensuring only 1 per-cohort assembly is built, even in cases where a cohort contains both SE and PE reads
+ - Inclusion of initial setup `bash` commands & Python script in pipeline
 
 ### Logs of earlier updates
 
