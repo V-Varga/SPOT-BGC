@@ -26,6 +26,10 @@ First major update, 2025.01.14: Build 2.0.0
  - Kraken2 has replaced BLASTN for the human contig elimination step, to improve speed
  - A safety measure has been added to the per-sample MetaSPAdes/SPAdes assembly: If a sample does not successfully assembly within 6 hours, the process will terminate & MEGAHIT will be used to assemble the sample, instead
  - Taxonomic profiling is now done with CheckM
+ - Usage notes/disclaimers:
+   - At this stage, most users will need to modify the `config.yaml` file manually in order to change the reference genome, as well as modify the `Snakefile` manually in order to change the settings/arguments of the various programs.
+   - Note that the containers used to run the programs are not included in this repository, but should be created by the user as described below.
+   - The workflow has not yet been tested on a SLURM HPC environment, only on a server. 
 
 ### Ongoing work for future versions
 
