@@ -44,8 +44,8 @@ while read line; do
 	mkdir -p results/Assembly/PerCohort; # create the directory if it doesn't exist
 	# identify files
 	# ref: https://merenlab.org/tutorials/assembly-based-metagenomics/
-	R1s=`ls ${parentname}*.1.fq | python -c 'import sys; print(",".join([x.strip() for x in sys.stdin.readlines()]))'`;
-	R2s=`ls ${parentname}*.2.fq | python -c 'import sys; print(",".join([x.strip() for x in sys.stdin.readlines()]))'`;
+	R1s=`ls ${line}*.1.fq | python -c 'import sys; print(",".join([x.strip() for x in sys.stdin.readlines()]))'`;
+	R2s=`ls ${line}*.2.fq | python -c 'import sys; print(",".join([x.strip() for x in sys.stdin.readlines()]))'`;
 	# now run the program
 	apptainer exec workflow/containers/metagenome_assembly.sif megahit -1 $R1s -2 $R2s -t $1 \
 	-o results/Assembly/PerCohort/${parentname}/;
