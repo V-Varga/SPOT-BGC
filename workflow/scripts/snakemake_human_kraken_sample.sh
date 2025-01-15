@@ -36,7 +36,7 @@ ls results/Assembly/PerSample/*/*/*_*.fasta | while read file; do
 	file_base_id="${file_base%_scaffolds}"; #this removes the "_scaffolds" substring
 	mkdir -p results/AssemblyNonHuman/PerSample/${grandparent_dir}/${file_base_id}; #create an output directory
 	# now run Kraken2
-	apptainer exec workflow/containers/env-kraken.sif kraken2 \
+	apptainer exec workflow/containers/env-kraken2db.sif kraken2 \
 	--db resources/kraken2_human_db/ --threads $thread_count \
 	--output results/AssemblyNonHuman/PerSample/${grandparent_dir}/${file_base_id}/${file_base_id}__kraken2_out.txt \
     --report results/AssemblyNonHuman/PerSample/${grandparent_dir}/${file_base_id}/${file_base_id}__kraken2_report.txt \

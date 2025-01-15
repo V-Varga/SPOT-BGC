@@ -34,7 +34,7 @@ ls results/Assembly/PerCohort/*/*_final.contigs.fa | while read file; do
 	file_base_id="${file_base%_final.contigs}"; #this removes the "_final.contigs" substring
 	mkdir -p results/AssemblyNonHuman/PerCohort/${parentname}; #create an output directory
 	# now run Kraken2
-	apptainer exec workflow/containers/env-kraken.sif kraken2 \
+	apptainer exec workflow/containers/env-kraken2db.sif kraken2 \
 	--db resources/kraken2_human_db/ --threads $thread_count \
 	--output results/AssemblyNonHuman/PerCohort/${parentname}/${file_base_id}__kraken2_out.txt \
     --report results/AssemblyNonHuman/PerCohort/${parentname}/${file_base_id}__kraken2_report.txt \
