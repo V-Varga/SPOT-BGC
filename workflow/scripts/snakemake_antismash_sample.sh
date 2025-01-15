@@ -27,7 +27,7 @@ thread_count=$1;
 
 ### Running AntiSMASH
 # run these in a while loop
-ls results/AssemblyNonHuman/PerSample/*/*/*_minContig1500.*.fa | while read file; do
+ls results/MAGs/PerSample/*/*/*_minContig1500.*.fa | while read file; do
 	# first designate variables & directories
 	parentname="$(dirname "$(dirname "$file")")"; 
 	grandparent_dir="${parentname##*/}"; # this gets the grandparent/cohort directory name

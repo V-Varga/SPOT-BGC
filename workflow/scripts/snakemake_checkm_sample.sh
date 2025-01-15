@@ -38,7 +38,7 @@ ls results/MAGs/PerSample/*/*/*_metabat2_minContig1500.1.fa | while read file; d
 	mkdir -p results/MAG_QC/PerSample/${grandparent_dir}/${file_base_id}; #create an output directory
 	# now run CheckM
 	apptainer exec workflow/containers/mag_assembly_qc.sif checkm lineage_wf --nt \
-	-f results/MAGs/PerSample/${grandparent_dir}/${file_base_id}/${file_base_id}_CheckM_results.txt \
+	-f results/MAG_QC/PerSample/${grandparent_dir}/${file_base_id}/${file_base_id}_CheckM_results.txt \
 	--tab_table -x fa -t $1 \
 	results/MAGs/PerSample/${grandparent_dir}/${file_base_id} \
 	results/MAG_QC/PerSample/${grandparent_dir}/${file_base_id}; 
