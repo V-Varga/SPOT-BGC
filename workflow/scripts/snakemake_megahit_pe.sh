@@ -32,8 +32,14 @@ ls results/DataNonHuman/BBNorm_Reads/*/*.1.fq | while read file; do
 	# find the SE file cohorts
 	parentname="$(basename "$(dirname "$file")")"; # this gets the parent/cohort directory name
 	# write the paths to the input firectories to a file
-	echo "results/DataNonHuman/BBNorm_Reads/${parentname}/" >> results/Assembly/PerCohort/MEGAHIT_Tracking_PE.txt;
+	echo "results/DataNonHuman/BBNorm_Reads/${parentname}/" >> results/Assembly/PerCohort/MEGAHIT_Tracking_PE_tmp.txt;
 done;
+
+# remove duplicate lines from the file
+# ref: https://unix.stackexchange.com/questions/30173/how-to-remove-duplicate-lines-inside-a-text-file
+awk '!seen[$0]++' results/Assembly/PerCohort/MEGAHIT_Tracking_PE_tmp.txt > results/Assembly/PerCohort/MEGAHIT_Tracking_PE.txt;
+# delete temporary file
+rm results/Assembly/PerCohort/MEGAHIT_Tracking_PE_tmp.txt;
 
 
 ### Running MEGAHIT
