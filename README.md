@@ -6,7 +6,7 @@ _A Snakemake Pipeline to Output meTagenomics-derived Biosynthetic Gene Clusters_
 
 Author: Vi Varga
 
-Last Major Update: 2025.01.15
+Last Major Update: 2025.01.17
 
 
 ## Introduction 
@@ -132,7 +132,7 @@ Please check the `config.yaml` file located at `config/config.yaml` to see the l
 
 ### Current published version
 
-First major update, 2025.01.14: Build 2.0.0
+First major update, 2025.01.17: Build 2.0.0
  - Kraken2 has replaced BLASTN for the human contig elimination step, to improve speed
  - A safety measure has been added to the per-sample MetaSPAdes/SPAdes assembly: If a sample does not successfully assembly within 6 hours, the process will terminate & MEGAHIT will be used to assemble the sample, instead
  - Taxonomic profiling is now done with CheckM
