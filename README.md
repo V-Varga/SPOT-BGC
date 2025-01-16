@@ -19,7 +19,6 @@ This pipeline can process both paired-end (PE) and single-end (SE) FASTQ input. 
 ## Pipeline structure
 
 The SPOT-BGC pipeline performs the following on input metagenomic FASTQ reads: 
-0. Process input files, generate orienting/indexing files for workflow
 1. Quality assessment: FastQC, MultiQC
 2. Quality trimming: Trimmomatic
 3. Human read filtration by mapping to the human genome: Bowtie2
