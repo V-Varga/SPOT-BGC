@@ -6,3 +6,4 @@ logs/
 .config/
 .cache/
 .java/
+config/SPOT-BGC__*
