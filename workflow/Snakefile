@@ -1,7 +1,7 @@
 # Snakefile for SPOT-BGC workflow pipeline
 
 # Author: Vi Varga
-# Last edit date: 2025.01.13
+# Last edit date: 2025.01.16
 
 # SPOT-BGC v.2.0.0
 # written in PyCharm Community Edition version 2024.3.1.1
@@ -13,12 +13,18 @@
 # ref: https://github.com/metagenome-atlas/metagenome-assembly/blob/main/workflow/Snakefile
 from pathlib import Path
 import pandas as pd
+import subprocess
 
 # absolute path to snakemake dir
 snakemake_dir = Path(workflow.snakefile).parent.resolve()
 
 # include default config values
 configfile: snakemake_dir.parent / "config/config.yaml"
+
+
+# generate the input files
+# ref: https://stackoverflow.com/questions/4256107/running-bash-commands-in-python
+subprocess.run("bash workflow/scripts/snakemake_setup.sh", shell=True)
 
 
 # load the data into dataframes
@@ -87,6 +93,9 @@ rule all:
 		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt",
 			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True),
 		"logs/MetaSPAdes/MetaSPAdes_PE_completion.txt",
+		'results/Assembly/PerCohort/MEGAHIT_Tracking_SE.txt',
+		'results/Assembly/PerCohort/MEGAHIT_Tracking_PE.txt',
+		'results/Assembly/PerCohort/MEGAHIT_Tracking_PEandSE.txt',
 		expand("logs/MEGAHIT/{cohort_name}_read_assembly_pe_log.txt",
 			cohort_name=fq_R1_names_df.Cohort),
 		"logs/MEGAHIT/MEGAHIT_PE_completion.txt",
@@ -167,7 +176,7 @@ rule trim_files_pe:
 		r2_unpaired="results/Trimmomatic/{cohort_id}/{sample_name}.2.unpaired.fastq",
 		# summary file
 		trim_summary_pe="results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_summary.txt"
-	threads: 10
+	threads: config['threads_trimming']
 	log:
 		"logs/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_log.txt"
 	singularity:
@@ -191,7 +200,7 @@ rule trim_files_se:
 		trimmed_se= "results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}.SE.fastq",
 		# summary file
 		trim_summary_pe="results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_summary.txt"
-	threads: 10
+	threads: config['threads_trimming']
 	log:
 		"logs/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_log.txt"
 	singularity:
@@ -244,7 +253,7 @@ rule index_genome:
 		multiext("resources/Ref/GCA_000001405__29_GRCh38__p14_masked",
 			".1.bt2",	".2.bt2", ".3.bt2", ".4.bt2",
 			".rev.1.bt2", ".rev.2.bt2"),
-	threads: 10
+	threads: config['threads_bowtie_index']
 	log:
 		"logs/Bowtie2/genome_index_log.txt"
 	singularity:
@@ -268,7 +277,7 @@ rule map_reads_pe:
 		non_human_fq2 = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.2.fq"
 	params:
 		unmapped_file_basename = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.fq"
-	threads: 10
+	threads: config['threads_bowtie']
 	log:
 		"logs/Bowtie2/{cohort_with_sample}_read_mapping_log.txt"
 	singularity:
@@ -292,7 +301,7 @@ rule map_reads_se:
 		human_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_human_map.sam",
 		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_Metrics.txt",
 		non_human_fqSE = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.SE.fq"
-	threads: 10
+	threads: config['threads_bowtie']
 	log:
 		"logs/Bowtie2/{cohort_with_sample}_read_mapping_log.txt"
 	singularity:
@@ -319,7 +328,7 @@ rule bbnorm_pe:
 		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_NON-human_map_output_kmers.png",
 		normalized_fq1 = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_norm.1.fq",
 		normalized_fq2 = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_norm.2.fq"
-	threads: 10
+	threads: config['threads_bbnorm']
 	log:
 		"logs/BBnorm/{cohort_mapped_with_sample}_read_mapping_log.txt"
 	shell:
@@ -339,7 +348,7 @@ rule bbnorm_se:
 		input_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_input_kmers.png",
 		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_output_kmers.png",
 		normalized_fqse = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq"
-	threads: 10
+	threads: config['threads_bbnorm']
 	log:
 		"logs/BBnorm/{cohort_with_sample}_read_mapping_log.txt"
 	shell:
@@ -376,7 +385,7 @@ rule assembly_perSample_pe:
 	log:
 		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_pe_log.txt",
 			cohort_norm_sample=fq_R1_names_df.CohortSample,allow_missing=True)
-	threads: 20
+	threads: config['threads_metaspades']
 	shell:
 		"bash workflow/scripts/snakemake_metaspades_pe_safe.sh {threads}"
 
@@ -389,33 +398,49 @@ rule assembly_perSample_se:
 	log:
 		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt",
 			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True)
-	threads: 20
+	threads: config['threads_metaspades']
 	shell:
 		"bash workflow/scripts/snakemake_metaspades_se_safe.sh {threads}"
+
+
+# rule assembly_perCohort_peANDse performs per-cohort paired- & single-end assembly with MEGAHIT
+rule assembly_perCohort_peANDse:
+	input:
+		'logs/100k_filt.txt'
+	output:
+		peANDse_log = 'logs/MEGAHIT/MEGAHIT_PEandSE_completion.txt', 
+		se_tracking = 'results/Assembly/PerCohort/MEGAHIT_Tracking_SE.txt',
+		pe_tracking = 'results/Assembly/PerCohort/MEGAHIT_Tracking_PE.txt',
+		peANDse_tracking = 'results/Assembly/PerCohort/MEGAHIT_Tracking_PEandSE.txt'
+	threads: config['threads_megahit']
+	shell:
+		"bash workflow/scripts/snakemake_megahit_peANDse.sh {threads}"
 
 # rule assembly_perCohort_pe performs per-cohort paired end assembly with MEGAHIT
 rule assembly_perCohort_pe:
 	input:
-		'logs/100k_filt.txt'
+		'logs/100k_filt.txt', 
+		rules.assembly_perCohort_peANDse.output.peANDse_tracking
 	output:
 		'logs/MEGAHIT/MEGAHIT_PE_completion.txt'
 	log:
 		expand("logs/MEGAHIT/{cohort_name}_read_assembly_pe_log.txt",
 			cohort_name=fq_R1_names_df.Cohort)
-	threads: 20
+	threads: config['threads_megahit']
 	shell:
 		"bash workflow/scripts/snakemake_megahit_pe.sh {threads}"
 
 # rule assembly_perCohort_se performs per-cohort single end assembly with MEGAHIT
 rule assembly_perCohort_se:
 	input:
-		'logs/100k_filt.txt'
+		'logs/100k_filt.txt',
+		rules.assembly_perCohort_peANDse.output.peANDse_tracking
 	output:
 		'logs/MEGAHIT/MEGAHIT_SE_completion.txt'
 	log:
 		expand("logs/MEGAHIT/{cohort_name}_read_assembly_se_log.txt",
 			cohort_name=fq_SE_names_df.Cohort)
-	threads: 20
+	threads: config['threads_megahit']
 	shell:
 		"bash workflow/scripts/snakemake_megahit_se.sh {threads}"
 
@@ -436,7 +461,7 @@ rule kraken_perSample:
 		rules.assembly_perSample_se.output
 	log:
 		"logs/AssemblyNonHuman_recordSample.txt"
-	threads: 10
+	threads: config['threads_kraken']
 	shell:
 		"bash workflow/scripts/snakemake_human_kraken_sample.sh {threads}"
 
@@ -444,11 +469,12 @@ rule kraken_perSample:
 rule kraken_perCohort:
 	input:
 		rules.kraken_copyDB.log,
+		rules.assembly_perCohort_peANDse.output.peANDse_log,
 		rules.assembly_perCohort_pe.output,
 		rules.assembly_perCohort_se.output
 	log:
 		"logs/AssemblyNonHuman_recordCohort.txt"
-	threads: 10
+	threads: config['threads_kraken']
 	shell:
 		"bash workflow/scripts/snakemake_human_kraken_cohort.sh {threads}"
 
@@ -460,7 +486,7 @@ rule binning_perSample:
 		rules.kraken_perSample.log
 	log:
 		"logs/MAGs/PerSample/metabat.log"
-	threads: 5
+	threads: config['threads_metabat']
 	shell:
 		"bash workflow/scripts/snakemake_metabat_sample.sh {threads}"
 
@@ -470,7 +496,7 @@ rule binning_perCohort:
 		rules.kraken_perCohort.log
 	log:
 		"logs/MAGs/PerCohort/metabat.log"
-	threads: 5
+	threads: config['threads_metabat']
 	shell:
 		"bash workflow/scripts/snakemake_metabat_cohort.sh {threads}"
 
@@ -482,7 +508,7 @@ rule mag_qc_perSample:
 		rules.binning_perSample.log
 	log:
 		"logs/MAG_QC/PerSample/CheckM.log"
-	threads: 5
+	threads: config['threads_checkm']
 	shell:
 		"bash workflow/scripts/snakemake_checkm_sample.sh {threads}"
 
@@ -492,7 +518,7 @@ rule mag_qc_perCohort:
 		rules.binning_perCohort.log
 	log:
 		"logs/MAG_QC/PerCohort/CheckM.log"
-	threads: 5
+	threads: config['threads_checkm']
 	shell:
 		"bash workflow/scripts/snakemake_checkm_cohort.sh {threads}"
 
@@ -508,7 +534,7 @@ rule taxa_perCohort:
 		rules.binning_perCohort.log
 	log:
 		"logs/Taxonomy/PerCohort/checkm_taxa_cohort.log"
-	threads: 5
+	threads: config['threads_checkm']
 	shell:
 		"bash workflow/scripts/snakemake_checkm_taxa_cohort.sh {threads}"
 
@@ -518,7 +544,7 @@ rule taxa_perSample:
 		rules.binning_perSample.log
 	log:
 		"logs/Taxonomy/PerSample/checkm_taxa_sample.log"
-	threads: 5
+	threads: config['threads_checkm']
 	shell:
 		"bash workflow/scripts/snakemake_checkm_taxa_sample.sh {threads}"
 
@@ -530,7 +556,7 @@ rule gecco_perSample:
 		rules.binning_perSample.log
 	log:
 		"logs/BGCs/PerSample/gecco.log"
-	threads: 5
+	threads: config['threads_gecco']
 	shell:
 		"bash workflow/scripts/snakemake_gecco_sample.sh {threads}"
 
@@ -540,7 +566,7 @@ rule gecco_perCohort:
 		rules.binning_perSample.log
 	log:
 		"logs/BGCs/PerCohort/gecco.log"
-	threads: 5
+	threads: config['threads_gecco']
 	shell:
 		"bash workflow/scripts/snakemake_gecco_cohort.sh {threads}"
 
@@ -551,7 +577,7 @@ rule antismash_perSample:
 		rules.binning_perSample.log
 	log:
 		"logs/BGCs/PerSample/antismash.log"
-	threads: 5
+	threads: config['threads_antismash']
 	shell:
 		"bash workflow/scripts/snakemake_antismash_sample.sh {threads}"
 
@@ -561,6 +587,6 @@ rule antismash_perCohort:
 		rules.binning_perSample.log
 	log:
 		"logs/BGCs/PerCohort/antismash.log"
-	threads: 5
+	threads: config['threads_antismash']
 	shell:
 		"bash workflow/scripts/snakemake_antismash_cohort.sh {threads}"
