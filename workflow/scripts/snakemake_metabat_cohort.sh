@@ -27,7 +27,7 @@ thread_count=$1;
 
 ### Running MetaBAT
 # run these in a while loop
-ls results/AssemblyNonHuman/PerCohort/*/*_final.contigs_nonHuman.fasta | while read file; do
+ls results/AssemblyNonHuman/PerCohort/[[:upper:]]*/*_nonHuman.fasta | while read file; do
 	# first designate variables & directories
 	parentname="$(basename "$(dirname "$file")")"; # this gets the parent/cohort directory name
 	mkdir -p results/MAGs/PerCohort/${parentname}; #create an output directory

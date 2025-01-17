@@ -1,12 +1,4 @@
-workflow/containers/bbtools.sif
-workflow/containers/env-antismash.sif
-workflow/containers/env-bowtie2.sif
-workflow/containers/env-gecco.sif
-workflow/containers/env-metaphlan.sif
-workflow/containers/env-QualityChecking.sif
-workflow/containers/env-trimmomatic.sif
-workflow/containers/mag_assembly_qc.sif
-workflow/containers/metagenome_assembly.sif
+workflow/containers/
 results/
 resources/
 logs/

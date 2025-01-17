@@ -1,3 +1,7 @@
+# config.yaml 
+
+# files necessary to run the pipeline
+
 human_genome: 'resources/Ref/GCA_000001405.29_GRCh38.p14_genomic_hardMask.fasta'
 
 human_genome_original: 'resources/Ref/GCA_000001405.29_GRCh38.p14_genomic.fna'
@@ -5,3 +9,27 @@ human_genome_original: 'resources/Ref/GCA_000001405.29_GRCh38.p14_genomic.fna'
 targets_per_sample: 'resources/SPOT-BGC__sample-target_info.txt'
 
 targets_per_cohort: 'resources/SPOT-BGC__cohort-target_info.txt'
+
+# thread settings that users may want to alter
+
+threads_trimming: 5
+
+threads_bowtie_index: 5
+
+threads_bowtie: 10
+
+threads_bbnorm: 10
+
+threads_metaspades: 20
+
+threads_megahit: 20
+
+threads_kraken: 10
+
+threads_metabat: 10
+
+threads_checkm: 10
+
+threads_gecco: 5
+
+threads_antismash: 5

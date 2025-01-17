@@ -4,9 +4,11 @@ From: ubuntu:22.04
 
 %arguments
 	ENV_FILE=environment.yml
+	REF_FILE=human_reference.fna
 
 %files
     {{ ENV_FILE }}
+	{{ REF_FILE }}
 
 %environment
 
@@ -45,11 +47,19 @@ From: ubuntu:22.04
     conda env create -f {{ ENV_FILE }} -p /opt/conda/envs/$ENV_NAME
     conda clean --all
 	
-	# Metaphlan database
-	# ref: https://forum.biobakery.org/t/how-to-install-the-latest-metaphlan-reference-db/3522/14
-	# ref: https://github.com/biobakery/MetaPhlAn/wiki/MetaPhlAn-4
+	# isolate the location & name of reference file
+	REF_FULL="{{ REF_FILE }}"
+	REF_NAME="${REF_FULL##*/}"
+	REF_REAL="$(find . -type f -name $REF_NAME 2>/dev/null | head -1)"
+	
+	# Install database for Kraken2
 	# ref: https://stackoverflow.com/a/75266596/18382033
-	conda run -n $ENV_NAME metaphlan --install
+	conda run -n $ENV_NAME kraken2-build --download-taxonomy --db kraken2_human_db/
+	conda run -n $ENV_NAME kraken2-build --db kraken2_human_db/ --add-to-library $REF_REAL
+	# Ref: https://software.cqls.oregonstate.edu/updates/docs/kraken2/MANUAL.html
+	# conda run -n $ENV_NAME kraken2-build --download-library human --db kraken2_human_db/
+	conda run -n $ENV_NAME kraken2-build --build --db kraken2_human_db/
+	conda run -n $ENV_NAME kraken2-build --clean --db kraken2_human_db/
 
 %runscript
     exec "$@"
@@ -58,7 +68,7 @@ From: ubuntu:22.04
 	OriginalAuthorGitHub csc-training
 	ModifyingAuthor ViVarga
 	Version v0.3
-	Date 20.07.2023
+	Date 09.01.2025
 
 %help
 	This is a container to create containerized versions of conda environments
