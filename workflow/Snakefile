@@ -487,8 +487,10 @@ rule binning_perSample:
 	log:
 		"logs/MAGs/PerSample/metabat.log"
 	threads: config['threads_metabat']
+	params:
+		bin_size = config['metabat_bin_size']
 	shell:
-		"bash workflow/scripts/snakemake_metabat_sample.sh {threads}"
+		"bash workflow/scripts/snakemake_metabat_sample.sh {threads} {params.bin_size}"
 
 # rule binning_perCohort bins the contigs into MAGs for the per-cohort assembly
 rule binning_perCohort:
@@ -497,8 +499,10 @@ rule binning_perCohort:
 	log:
 		"logs/MAGs/PerCohort/metabat.log"
 	threads: config['threads_metabat']
+	params:
+		bin_size = config['metabat_bin_size']
 	shell:
-		"bash workflow/scripts/snakemake_metabat_cohort.sh {threads}"
+		"bash workflow/scripts/snakemake_metabat_cohort.sh {threads} {params.bin_size}"
 
 
 # quality checking of the assembled MAGs
