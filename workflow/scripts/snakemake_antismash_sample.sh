@@ -33,13 +33,13 @@ ls results/MAGs/PerSample/*/*/*_minContig1500.*.fa | while read file; do
 	grandparent_dir="${parentname##*/}"; # this gets the grandparent/cohort directory name
 	full_file="${file##*/}"; #this line removes the path before the file name
 	file_base="${full_file%.*}"; #this line removes the file extension .fa
-	file_base2="${file_base%.*}"; #this line removes the file extension .1
-	file_base_id="${file_base2%_metabat2_minContig1500}"; #this removes the "_metabat2_minContig1500" substring
-	mkdir -p results/BGCs/AntiSMASH/PerSample/${grandparent_dir}/${file_base_id}; #create an output directory
+	file_base2="${file_base//./_}"; # replace periods with underscores
+	# ref: https://stackoverflow.com/questions/54964666/bash-shell-reworking-variable-replace-dots-by-underscore
+	mkdir -p results/BGCs/AntiSMASH/PerSample/${grandparent_dir}/${file_base2}; #create an output directory
 	# now run AntiSMASH
 	apptainer exec workflow/containers/env-antismash.sif antismash --taxon bacteria --cpus $thread_count \
 	--minlength 30 --no-abort-on-invalid-records --genefinding-tool prodigal-m \
-	--output-dir results/BGCs/AntiSMASH/PerSample/${grandparent_dir}/${file_base_id} \
+	--output-dir results/BGCs/AntiSMASH/PerSample/${grandparent_dir}/${file_base2} \
 	--fullhmmer --pfam2go $file;
 done;
 
