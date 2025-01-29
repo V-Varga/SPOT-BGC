@@ -143,7 +143,7 @@ Minor update, 2025.01.18: Build 2.0.1
 Minor update, 2025.01.XX (date tentative): Build 2.1.0
  - Ensuring environmental compliance & functionality on SLURM HPCs
 
-### Logs of earlier updates
+### Logs of previous major updates
 
 First major update, 2025.01.17: Build 2.0.0
  - Kraken2 has replaced BLASTN for the human contig elimination step, to improve speed
