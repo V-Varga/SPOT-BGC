@@ -110,7 +110,7 @@ Once you have organized your project as illustrated above, you can run the pipel
 # activate your conda snakemake environment
 conda activate snakemake
 # standard usage
-snakemake --use-singularity --cores 20 --config threads_trimming=6
+snakemake --use-singularity --cores 20
 # note that you must call the --use-singularity flag, as all programs are installed in Apptainer containers
 # note that when working on a server, 
 # you can specify the specific cores used with `taskset`
