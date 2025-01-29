@@ -6,7 +6,7 @@ _A Snakemake Pipeline to Output meTagenomics-derived Biosynthetic Gene Clusters_
 
 Author: Vi Varga
 
-Last Major Update: 2025.01.29
+Last Major Update: 2025.01.28
 
 
 ## Introduction 
@@ -127,10 +127,23 @@ snakemake --use-singularity --cores 20 --config threads_trimming=6
 
 Please check the `config.yaml` file located at `config/config.yaml` to see the list of programs whose thread allocation can be modified in this way.
 
+As of 2025.01.28, note that the default MetaBat minimum MAG size has been added to the `config.yaml` file, and can therefore also be modified via the command line.
+
 
 ## Pipeline status
 
-### Current published version
+### Current release version
+
+Minor update, 2025.01.18: Build 2.0.1
+ - Hotfix for AntiSMASH functionality in the case of multiple MAGs predicted from an assembly
+ - MetaBat minimum MAG size has been lowered from program default, and the setting has been added to the `config.yaml` file for easier user modification
+
+### Ongoing work for future versions
+
+Minor update, 2025.01.XX (date tentative): Build 2.1.0
+ - Ensuring environmental compliance & functionality on SLURM HPCs
+
+### Logs of earlier updates
 
 First major update, 2025.01.17: Build 2.0.0
  - Kraken2 has replaced BLASTN for the human contig elimination step, to improve speed
@@ -142,13 +155,6 @@ First major update, 2025.01.17: Build 2.0.0
  - Usage notes/disclaimers:
    - At this stage, most users will need to modify the `config.yaml` file manually in order to change the reference genome, as well as modify the `Snakefile` or `bash` scripts manually in order to change the settings/arguments of the various programs.
    - The workflow has not yet been tested on a SLURM HPC environment, only on a server. 
-
-### Ongoing work for future versions
-
-Minor update, 2025.01.XX (date tentative): Build 2.1.0
- - Ensuring environmental compliance & functionality on SLURM HPCs
-
-### Logs of earlier updates
 
 Initial publication, 2024.11.12: Build 1.0.0-beta
  - The SPOT-BGC pipeline is functional, with the human genome as the reference genome. 
