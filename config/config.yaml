@@ -33,3 +33,7 @@ threads_checkm: 10
 threads_gecco: 5
 
 threads_antismash: 5
+
+# additional program settings
+
+metabat_bin_size: 10000
