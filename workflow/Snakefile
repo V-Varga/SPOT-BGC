@@ -604,7 +604,7 @@ rule antismash_perCohort:
 # ref: https://stackoverflow.com/questions/77316349/send-email-after-snakemake-workflow-finishes-successfully-on-slurm
 
 # retrieve user notification email
-EMAIL = config['user_email']
+EMAIL = str(config['user_email'])
 
 # if the workflow completed successfully
 onsuccess:

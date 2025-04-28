@@ -2,7 +2,7 @@
 
 # user email for notifications
 
-user_email: NO_EMAIL
+user_email: 'NO_EMAIL'
 
 # files necessary to run the pipeline
 
