@@ -41,7 +41,3 @@ threads_antismash: 5
 # additional program settings
 
 metabat_bin_size: 10000
-
-antismash_sample_process_num: 1
-
-antismash_cohort_process_num: 4

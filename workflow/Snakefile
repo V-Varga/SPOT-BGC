@@ -582,10 +582,8 @@ rule antismash_perSample:
 	log:
 		"logs/BGCs/PerSample/antismash.log"
 	threads: config['threads_antismash']
-	params:
-		process_numb=config['antismash_sample_process_num']
 	shell:
-		"bash workflow/scripts/snakemake_antismash_sample_parallel.sh {threads} {params.process_numb}"
+		"bash workflow/scripts/snakemake_antismash_sample.sh {threads}"
 
 # rule antismash_perCohort should run BGC analysis using AntiSMASH for the per-cohort assemblies
 rule antismash_perCohort:
@@ -594,10 +592,8 @@ rule antismash_perCohort:
 	log:
 		"logs/BGCs/PerCohort/antismash.log"
 	threads: config['threads_antismash']
-	params:
-		process_numb=config['antismash_cohort_process_num']
 	shell:
-		"bash workflow/scripts/snakemake_antismash_cohort_parallel.sh {threads} {params.process_numb}"
+		"bash workflow/scripts/snakemake_antismash_cohort.sh {threads}"
 
 
 ## Part 4: Notify the user of completion
