@@ -127,6 +127,9 @@ snakemake --use-singularity --cores 20 --config threads_trimming=6
 
 Please check the `config.yaml` file located at `config/config.yaml` to see the list of programs whose thread allocation can be modified in this way.
 
+In addition to the thread count allocation, a few other settings can be modified directly from the command line: 
+ - The bin size used by MetaBat
+ - The number of parallel processes to execute using GNU Parallel when running AntiSMASH
 
 ## Pipeline status
 
@@ -145,7 +148,7 @@ First major update, 2025.01.17: Build 2.0.0
 
 ### Ongoing work for future versions
 
-Minor update, 2025.01.XX (date tentative): Build 2.1.0
+Minor update, 2025.04.XX (date tentative): Build 2.1.0
  - Ensuring environmental compliance & functionality on SLURM HPCs
 
 ### Logs of earlier updates
