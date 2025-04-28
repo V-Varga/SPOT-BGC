@@ -598,3 +598,22 @@ rule antismash_perCohort:
 		process_numb=config['antismash_cohort_process_num']
 	shell:
 		"bash workflow/scripts/snakemake_antismash_cohort_parallel.sh {threads} {params.process_numb}"
+
+
+## Part 4: Notify the user of completion
+# ref: https://stackoverflow.com/questions/77316349/send-email-after-snakemake-workflow-finishes-successfully-on-slurm
+
+# retrieve user notification email
+EMAIL = config['user_email']
+
+# if the workflow completed successfully
+onsuccess:
+	print("SPOT-BGC workflow finished without error.")
+	if EMAIL != 'NO_EMAIL':
+		shell("mail -s 'SPOT-BGC workflow finished without error.' {EMAIL} < {log}")
+
+# if an error occurred
+onerror:
+	print("An error occurred during execution of the SPOT-BGC workflow. The process has terminated.")
+	if EMAIL != 'NO_EMAIL':
+		shell("mail -s 'An error occurred during execution of the SPOT-BGC workflow. The process has terminated.' {EMAIL} < {log}")
