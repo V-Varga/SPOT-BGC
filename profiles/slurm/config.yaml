@@ -1,0 +1,25 @@
+# SLURM profile
+
+#jobs: 1
+
+executor: slurm
+
+#use-apptainer: true
+
+default-resources:
+    slurm_partition: "vera"
+    slurm_account: "c3se2025-1-11"
+    mem_mb_per_cpu: 10000
+    runtime: 1440  # in minutes (60min/hr)*(24hr/day)=1440min/day
+    cpus_per_task: 1
+    tasks: 10 # originally 64, then 4 for testing
+    nodes: 1
+    #slurm_extra: "--mail-type=BEGIN,END,FAIL --mail-user=<EMAIL>"
+
+
+# References: 
+# https://hpc-docs.cubi.bihealth.org/slurm/snakemake/
+# https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html
+# https://bluegenes.github.io/snakemake-via-slurm/
+# https://github.com/snakemake/snakemake-executor-plugin-slurm/issues/210
+# https://github.com/Snakemake-Profiles/slurm
