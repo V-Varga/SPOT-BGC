@@ -6,7 +6,7 @@ _A Snakemake Pipeline to Output meTagenomics-derived Biosynthetic Gene Clusters_
 
 Author: Vi Varga
 
-Last Major Update: 2025.01.17
+Last Major Update: 2025.07.31
 
 
 ## Introduction 
@@ -104,7 +104,20 @@ For the setup above, please note the following:
  - The REFERENCE should be a DNA reference genome. Modify the `config.yaml` file located in the `config/` directory with your reference genome name.
  - As is illustrated, the SPOT-BGC pipeline works with both PE and SE input FASTQ files. 
 
-Once you have organized your project as illustrated above, you can run the pipeline from your terminal from the main directory (i.e., the directory where `config/`, `resources/` and `workflow/` are located) like so: 
+Once you have organized your project as illustrated above, run the pipeline setup script from your SPOT-BGC working directory, like so [^1]: 
+
+```bash
+# make the script executable
+chmod +x workflow/scripts/snakemake_setup.sh
+# this script will create some key indexing files for the SPOT-BGC pipeline
+bash workflow/scripts/snakemake_setup.sh
+```
+
+[^1]: Note that the above is a change from SPOT-BGC v. 2.0.0 in order to comply with SLURM processing requirements. Previously, the running of the `snakemake_setup.sh` script was included in the `Snakefile`, but this raised errors when run in a SLURM environment.
+
+### Running on a regular Linux server
+
+After running the `snakemake_setup.sh` script, you can run the pipeline from your terminal from the main directory (i.e., the directory where `config/`, `resources/` and `workflow/` are located) like so: 
 
 ```bash
 # activate your conda snakemake environment
@@ -129,11 +142,46 @@ Please check the `config.yaml` file located at `config/config.yaml` to see the l
 
 In addition to the thread count allocation, the following settings can be modified directly from the command line: 
  - The bin size used by MetaBat
+ - The memory allocation usable by BBnorm
+ - The maximum memory allocation to be used for normalization & assembly
+ - Email to use to notify user of completion (Note that this may not work of SLURM clusters, it requires the `mail` Linux program to be installed!)
+
+### Running on a SLURM HPC
+
+If you wish to run the SPOT-BGC pipeline in a SLURM environment, it is recommended to use an interactive session in an instance of `zellij`, `screen`, `tmux`, etc. Snakemake will submit automatically submit jobs and request resource allocation for you. While it is possible to include all pertinent information in the Snakemake command line call, I have included an example SLURM profile `config.yaml` file in the `profiles/slurm/` directory. Once modified with your HPC project ID, etc., it can be used to run the SPOT-BGC pipeline like so: 
+
+```bash
+# open an interactive, detachable terminal session
+zellij -s snakemake-SPOT-BGC
+# zellij attach snakemake-SPOT-BGC to reattach later
+module purge
+module load snakemake/8.27.0 # or whatever version of Snakemake is supported on your HPC
+# note that NO OTHER MODULE should be loaded other than Snakemake
+chmod +x workflow/scripts/snakemake_setup.sh
+bash workflow/scripts/snakemake_setup.sh
+snakemake --executor slurm --jobs 10 --profile=profiles/slurm --use-singularity -w 1000
+# it is recommended to use -w 1000 or similar to allow for some latency that can occur on SLURM clusters
+# --jobs can be set however the user prefers - 10 was simply what I used
+```
 
 
 ## Pipeline status
 
 ### Current published version
+
+Second major update, 2025.07.31: Build 3.0.0
+ - Ensured SLURM HPC environmental compliance & functionality.
+   - A change made for version 2.0.0 has been rolled back, and the `snakemake_setup.sh` script must once again be run by the user _prior_ to running the SPOT-BGC pipeline. This was done due to circumvent complications with running Snakemake in an HPC environment.
+ - The configuration file at `config/config.yaml` includes some additional parameters that can be modified from the command line beyond program thread counts, such as the memory allocation to BBnorm.
+ - Usage notes/disclaimers:
+   - At this stage, most users will need to modify the `config.yaml` file manually in order to change the reference genome, as well as modify the `Snakefile` or `bash` scripts manually in order to change the settings/arguments of the various programs.
+
+### Ongoing work for future versions
+
+Potential future plans (no set date):
+ - Branching pipeline: Allow user to choose which programs in the later parts of the pipeline actually need to be run.
+
+### Logs of earlier updates
 
 First major update, 2025.01.17: Build 2.0.0
  - Kraken2 has replaced BLASTN for the human contig elimination step, to improve speed
@@ -145,13 +193,6 @@ First major update, 2025.01.17: Build 2.0.0
  - Usage notes/disclaimers:
    - At this stage, most users will need to modify the `config.yaml` file manually in order to change the reference genome, as well as modify the `Snakefile` or `bash` scripts manually in order to change the settings/arguments of the various programs.
    - The workflow has not yet been tested on a SLURM HPC environment, only on a server. 
-
-### Ongoing work for future versions
-
-Minor update, 2025.04.XX (date tentative): Build 2.1.0
- - Ensuring environmental compliance & functionality on SLURM HPCs
-
-### Logs of earlier updates
 
 Initial publication, 2024.11.12: Build 1.0.0-beta
  - The SPOT-BGC pipeline is functional, with the human genome as the reference genome. 
