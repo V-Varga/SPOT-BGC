@@ -41,7 +41,7 @@ The primary dependencies of the SPOT-BGC pipeline are:
 
 ## Running SPOT-BGC
 
-Owing to a temporary bug in Snakemake at the time of this pipeline's creation, the programs used must be run out of containers, rather than via `conda` environments ([see source here](https://github.com/snakemake/snakemake/issues/3163)). All files necessary to generate the containers are included in this repository. 
+Owing to a temporary bug in Snakemake at the time of this pipeline's creation, the programs used must be run out of containers, rather than via `conda` environments ([source](https://github.com/snakemake/snakemake/issues/3163)). All files necessary to generate the containers are included in this repository. 
 
 To build the containers with Apptainer, run the following code from the `workflow/` directory: 
 
@@ -101,13 +101,13 @@ Set up your project file structure as follows:
 For the setup above, please note the following: 
  - The COHORT_ID is intended to be the NCBI BioProject number, but can be designated by the user however you wish. However, a cohort ID **must** be provided for every sample.
  - The sample raw FASTQ files should be in directories with the sample name. This is the structure that results if the data is downloaded directly from the NCBI with SRA (Sequence Read Archive) `fetch`.
- - The REFERENCE should be a DNA reference genome. Modify the `config.yaml` file located in the `config/` directory with your reference genome name.
+ - The REFERENCE should be a DNA reference genome. Modify the `config.yaml` file located in the `config/` directory with your reference genome name, or overwrite the name on the command line with `--config human_genome=resources/Ref/REFERENCE.FASTA`.
  - As is illustrated, the SPOT-BGC pipeline works with both PE and SE input FASTQ files. 
 
 Once you have organized your project as illustrated above, run the pipeline setup script from your SPOT-BGC working directory, like so [^1]: 
 
 ```bash
-# make the script executable
+# make the script executable if needed
 chmod +x workflow/scripts/snakemake_setup.sh
 # this script will create some key indexing files for the SPOT-BGC pipeline
 bash workflow/scripts/snakemake_setup.sh
@@ -144,11 +144,13 @@ In addition to the thread count allocation, the following settings can be modifi
  - The bin size used by MetaBat
  - The memory allocation usable by BBnorm
  - The maximum memory allocation to be used for normalization & assembly
- - Email to use to notify user of completion (Note that this may not work of SLURM clusters, it requires the `mail` Linux program to be installed!)
+ - Email to use to notify user of completion [^2]
+
+[^2]: Note that the email feature requires the `mail` (https://linux.die.net/man/1/mail) Linux program to be installed.
 
 ### Running on a SLURM HPC
 
-If you wish to run the SPOT-BGC pipeline in a SLURM environment, it is recommended to use an interactive session in an instance of `zellij`, `screen`, `tmux`, etc. Snakemake will submit automatically submit jobs and request resource allocation for you. While it is possible to include all pertinent information in the Snakemake command line call, I have included an example SLURM profile `config.yaml` file in the `profiles/slurm/` directory. Once modified with your HPC project ID, etc., it can be used to run the SPOT-BGC pipeline like so: 
+If you wish to run the SPOT-BGC pipeline in a SLURM environment, it is recommended to use an interactive session in an instance of `zellij`, `screen`, `tmux`, etc. Snakemake will automatically submit jobs and request resource allocation for you. While it is possible to include all pertinent information in the Snakemake command line call, I have included an example SLURM profile `config.yaml` file in the `profiles/slurm/` directory. Once modified with your HPC project ID, etc., it can be used to run the SPOT-BGC pipeline like so: 
 
 ```bash
 # open an interactive, detachable terminal session
