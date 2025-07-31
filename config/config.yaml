@@ -41,3 +41,7 @@ threads_antismash: 5
 # additional program settings
 
 metabat_bin_size: 10000
+
+bbnorm_memory: '-Xmx40G'
+
+memory_maximum: 60000
