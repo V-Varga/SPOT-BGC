@@ -50,3 +50,10 @@ ls */*.fq > FullFileNamesTrimmed.txt;
 # and parse them with the python script
 python ../../../workflow/scripts/create_target_db.py ../../../resources/SPOT-BGC__sample-target_info_100k.txt \
 FullFileNamesTrimmed.txt noexclusion,noneexcluded;
+
+
+# navigate back up to the main directory
+cd ../../..;
+# create an output file that marks script completion
+mkdir logs/completion;
+touch logs/completion/100k_filt__COMPLETE.txt;
