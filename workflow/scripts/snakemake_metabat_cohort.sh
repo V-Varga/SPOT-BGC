@@ -37,6 +37,9 @@ ls results/AssemblyNonHuman/PerCohort/[[:upper:]]*/*_nonHuman.fasta | while read
 done;
 
 
+# create an output file to mark program completion
+touch logs/completion/metabat_perCohort__COMPLETE.txt;
+
 # Refs: 
 # MetaBAT manual: https://gensoft.pasteur.fr/docs/MetaBAT/2.15/
 # -i [ --inFile ] arg Contigs in (gzipped) fasta file format [Mandatory]

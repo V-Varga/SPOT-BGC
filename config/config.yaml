@@ -1,5 +1,9 @@
 # config.yaml 
 
+# user email for notifications
+
+user_email: 'NO_EMAIL'
+
 # files necessary to run the pipeline
 
 human_genome: 'resources/Ref/GCA_000001405.29_GRCh38.p14_genomic_hardMask.fasta'
@@ -37,3 +41,7 @@ threads_antismash: 5
 # additional program settings
 
 metabat_bin_size: 10000
+
+bbnorm_memory: '-Xmx40G'
+
+memory_maximum: 60000

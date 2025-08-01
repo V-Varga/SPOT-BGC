@@ -26,7 +26,8 @@ From: ubuntu:22.04
 	nano \
 	tree \
 	unzip \
-	libdbus-1-3
+	libdbus-1-3 \
+	parallel
 	rm -rf /var/lib/apt/lists/*
 	apt-get clean
 

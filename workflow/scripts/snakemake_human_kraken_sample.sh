@@ -45,6 +45,10 @@ ls results/Assembly/PerSample/*/*/*_*.fasta | while read file; do
 done;
 
 
+# create a file indicating program completion
+touch logs/completion/Kraken_perSample__COMPLETE.txt
+
+
 # Refs: 
 # Kraken2 example usage: https://hackmd.io/@AstrobioMike/kraken2-human-read-removal#Human-read-removal-with-kraken2
 # Kraken2 arguments: https://software.cqls.oregonstate.edu/updates/docs/kraken2/MANUAL.html
