@@ -6,6 +6,7 @@ _A Snakemake Pipeline to Output meTagenomics-derived Biosynthetic Gene Clusters_
 
 Author: Vi Varga
 
+
 Last Major Update: 2025.07.31
 
 
@@ -123,7 +124,7 @@ After running the `snakemake_setup.sh` script, you can run the pipeline from you
 # activate your conda snakemake environment
 conda activate snakemake
 # standard usage
-snakemake --use-singularity --cores 20 --config threads_trimming=6
+snakemake --use-singularity --cores 20
 # note that you must call the --use-singularity flag, as all programs are installed in Apptainer containers
 # note that when working on a server, 
 # you can specify the specific cores used with `taskset`
@@ -169,7 +170,18 @@ snakemake --executor slurm --jobs 10 --profile=profiles/slurm --use-singularity 
 
 ## Pipeline status
 
-### Current published version
+### Current release version
+
+Minor update, 2025.01.18: Build 2.0.1
+ - Hotfix for AntiSMASH functionality in the case of multiple MAGs predicted from an assembly
+ - MetaBat minimum MAG size has been lowered from program default, and the setting has been added to the `config.yaml` file for easier user modification
+
+### Ongoing work for future versions
+
+Minor update, 2025.01.XX (date tentative): Build 2.1.0
+ - Ensuring environmental compliance & functionality on SLURM HPCs
+
+### Logs of previous major updates
 
 Second major update, 2025.07.31: Build 3.0.0
  - Ensured SLURM HPC environmental compliance & functionality.
