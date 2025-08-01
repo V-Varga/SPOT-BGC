@@ -42,6 +42,10 @@ ls results/AssemblyNonHuman/PerSample/*/[[:upper:]]*/*_nonHuman.fasta | while re
 done;
 
 
+# create an output file to mark program completion
+touch logs/completion/metabat_perSample__COMPLETE.txt;
+
+
 # Refs: 
 # MetaBAT manual: https://gensoft.pasteur.fr/docs/MetaBAT/2.15/
 # -i [ --inFile ] arg Contigs in (gzipped) fasta file format [Mandatory]
