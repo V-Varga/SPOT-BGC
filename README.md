@@ -7,7 +7,7 @@ _A Snakemake Pipeline to Output meTagenomics-derived Biosynthetic Gene Clusters_
 Author: Vi Varga
 
 
-Last Major Update: 2025.07.31
+Last Major Update: 2025.08.02
 
 
 ## Introduction 
@@ -183,7 +183,7 @@ Minor update, 2025.01.XX (date tentative): Build 2.1.0
 
 ### Logs of previous major updates
 
-Second major update, 2025.07.31: Build 3.0.0
+Second major update, 2025.08.02: Build 3.0.0
  - Ensured SLURM HPC environmental compliance & functionality.
    - A change made for version 2.0.0 has been rolled back, and the `snakemake_setup.sh` script must once again be run by the user _prior_ to running the SPOT-BGC pipeline. This was done due to circumvent complications with running Snakemake in an HPC environment.
  - The configuration file at `config/config.yaml` includes some additional parameters that can be modified from the command line beyond program thread counts, such as the memory allocation to BBnorm.
