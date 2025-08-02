@@ -172,17 +172,6 @@ snakemake --executor slurm --jobs 10 --profile=profiles/slurm --use-singularity 
 
 ### Current release version
 
-Minor update, 2025.01.18: Build 2.0.1
- - Hotfix for AntiSMASH functionality in the case of multiple MAGs predicted from an assembly
- - MetaBat minimum MAG size has been lowered from program default, and the setting has been added to the `config.yaml` file for easier user modification
-
-### Ongoing work for future versions
-
-Minor update, 2025.01.XX (date tentative): Build 2.1.0
- - Ensuring environmental compliance & functionality on SLURM HPCs
-
-### Logs of previous major updates
-
 Second major update, 2025.08.02: Build 3.0.0
  - Ensured SLURM HPC environmental compliance & functionality.
    - A change made for version 2.0.0 has been rolled back, and the `snakemake_setup.sh` script must once again be run by the user _prior_ to running the SPOT-BGC pipeline. This was done due to circumvent complications with running Snakemake in an HPC environment.
@@ -195,7 +184,11 @@ Second major update, 2025.08.02: Build 3.0.0
 Potential future plans (no set date):
  - Branching pipeline: Allow user to choose which programs in the later parts of the pipeline actually need to be run.
 
-### Logs of earlier updates
+### Logs of previous major updates
+
+Minor update, 2025.01.18: Build 2.0.1
+ - Hotfix for AntiSMASH functionality in the case of multiple MAGs predicted from an assembly
+ - MetaBat minimum MAG size has been lowered from program default, and the setting has been added to the `config.yaml` file for easier user modification
 
 First major update, 2025.01.17: Build 2.0.0
  - Kraken2 has replaced BLASTN for the human contig elimination step, to improve speed
