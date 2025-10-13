@@ -39,6 +39,9 @@ ls results/MAGs/PerSample/*/*/*_minContig1500.*.fa | while read file; do
 	# now run GECCO
 	apptainer exec workflow/containers/env-gecco.sif gecco run --genome $file \
 	-o results/BGCs/GECCO/PerSample/${grandparent_dir}/${file_base_id} --jobs $thread_count -m 0.3;
+	# and convert the results to GFF format
+	apptainer exec workflow/containers/env-gecco.sif gecco convert clusters \
+	-i results/BGCs/GECCO/PerSample/${grandparent_dir}/${file_base_id} --format gff;
 done;
 
 
