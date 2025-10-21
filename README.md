@@ -32,6 +32,24 @@ The SPOT-BGC pipeline performs the following on input metagenomic FASTQ reads:
 11. Taxonomic assignments of the MAGs: CheckM
 12. BGC predictions: GECCO, AntiSMASH
 
+```mermaid
+flowchart TD
+    X(Set up working directory with snakemake_setup.sh) --> A[Read QC]
+    A --> B[Quality Trimming]
+    B --> C[Human Read Filtration]
+    C --> D[Read Count Normalization]
+    D --> E[>= 100k Reads Filtration]
+    E --> F{Per-Cohort Assembly}
+    E --> G{Per-Sample Assembly}
+    F --> H[Human Contig Elimination]
+    G --> H[Human Contig Elimination]
+    H --> I[Binning Contigs into MAGs]
+    I --> J[MAG QC]
+    J --> K[Taxonomic Assignment]
+    K --> L[BGC Prediction]
+    L --> |Optional| M(Clean working directory with snakemake_cleanup.sh)
+```
+
 
 ## Dependencies
 
@@ -172,12 +190,15 @@ snakemake --executor slurm --jobs 10 --profile=profiles/slurm --use-singularity 
 
 ### Current release version
 
-Second major update, 2025.08.02: Build 3.0.0
- - Ensured SLURM HPC environmental compliance & functionality.
-   - A change made for version 2.0.0 has been rolled back, and the `snakemake_setup.sh` script must once again be run by the user _prior_ to running the SPOT-BGC pipeline. This was done due to circumvent complications with running Snakemake in an HPC environment.
- - The configuration file at `config/config.yaml` includes some additional parameters that can be modified from the command line beyond program thread counts, such as the memory allocation to BBnorm.
- - Usage notes/disclaimers:
-   - At this stage, most users will need to modify the `config.yaml` file manually in order to change the reference genome, as well as modify the `Snakefile` or `bash` scripts manually in order to change the settings/arguments of the various programs.
+Wildcard patch & minor updates, 2025.10.22: Build 3.1.0
+ - Patch wildcard usage: Resolved issues relating to wildcard inconsistency that was causing the pipeline to occasionally crash
+   - I received help from StackOverflow contributors in this process: 
+     - Second Question (which enabled me to track down the true source of the errors): https://stackoverflow.com/questions/79792470/how-can-i-use-wildcard-paths-from-a-pandas-dataframe-as-required-rule-inputs-and/79792740#79792740
+     - First Question: https://stackoverflow.com/questions/79790165/snakemake-wildcard-issues-using-touch-to-avoid-premature-pipeline-progression
+ - Quality of life updates: 
+   - GECCO: writing out GFF results files by default for easier parsing
+   - Working directory cleaning: The `workflow/scripts/snakemake_cleanup.sh` script can now be used to clean the SPOT-BGC working directory prior to rerunning the pipeline (i.e., removing old results & log files, deleting the files in `resources/RawData/` etc.)
+   - Additions to `config.yaml` file: MetaSPAdes timeout time, domain selection for CheckM taxonomy
 
 ### Ongoing work for future versions
 
@@ -185,6 +206,13 @@ Potential future plans (no set date):
  - Branching pipeline: Allow user to choose which programs in the later parts of the pipeline actually need to be run.
 
 ### Logs of previous major updates
+
+Second major update, 2025.08.02: Build 3.0.0
+ - Ensured SLURM HPC environmental compliance & functionality.
+   - A change made for version 2.0.0 has been rolled back, and the `snakemake_setup.sh` script must once again be run by the user _prior_ to running the SPOT-BGC pipeline. This was done due to circumvent complications with running Snakemake in an HPC environment.
+ - The configuration file at `config/config.yaml` includes some additional parameters that can be modified from the command line beyond program thread counts, such as the memory allocation to BBnorm.
+ - Usage notes/disclaimers:
+   - At this stage, most users will need to modify the `config.yaml` file manually in order to change the reference genome, as well as modify the `Snakefile` or `bash` scripts manually in order to change the settings/arguments of the various programs.
 
 Minor update, 2025.01.18: Build 2.0.1
  - Hotfix for AntiSMASH functionality in the case of multiple MAGs predicted from an assembly
