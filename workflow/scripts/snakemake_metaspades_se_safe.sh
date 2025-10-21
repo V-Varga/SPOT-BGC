@@ -12,9 +12,9 @@
 # run will be cancelled, and MEGAHIT will be run on the sample, instead.
 # 
 # Usage: 
-# 	./snakemake_metaspades_se_safe.sh threads
+# 	./snakemake_metaspades_se_safe.sh threads timeout_val
 # 	OR
-# 	bash snakemake_metaspades_se_safe.sh threads
+# 	bash snakemake_metaspades_se_safe.sh threads timeout_val
 # 
 # 	Note that this script is intended to be run from the parent SPOT-BGC/ directory!
 #
@@ -24,6 +24,8 @@
 # take thread count as positional argument
 # ref: https://www.baeldung.com/linux/use-command-line-arguments-in-bash-script
 thread_count=$1;
+# time to wait for timeout
+timeout_val=$2;
 
 
 # creating the completion tracking file
@@ -53,7 +55,7 @@ if [ -s results/Assembly/PerSample/Assembly_INCOMPLETE_SE.TXT ]; then
 		file_base_id="${file_base2%_norm}"; #this removes the "_norm" substring
 		mkdir -p results/Assembly/PerSample/${parentname}/${file_base_id}; #create an output directory
 		# now run the program
-		timeout 6h apptainer exec workflow/containers/metagenome_assembly.sif spades.py \
+		timeout $timeout_val apptainer exec workflow/containers/metagenome_assembly.sif spades.py \
 		-s $file --checkpoints all --threads $thread_count \
 		-o results/Assembly/PerSample/${parentname}/${file_base_id};
 		# check exit status of each sample
