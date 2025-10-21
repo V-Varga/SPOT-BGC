@@ -11,9 +11,9 @@
 # perform taxonomic profiling. 
 # 
 # Usage: 
-# 	./snakemake_checkm_taxa_cohort.sh threads
+# 	./snakemake_checkm_taxa_cohort.sh threads checkm_domain_id
 # 	OR
-# 	bash snakemake_checkm_taxa_cohort.sh threads
+# 	bash snakemake_checkm_taxa_cohort.sh threads checkm_domain_id
 # 
 # 	Note that this script is intended to be run from the parent SPOT-BGC-working/ directory!
 #
@@ -23,6 +23,8 @@
 # take thread count as positional argument
 # ref: https://www.baeldung.com/linux/use-command-line-arguments-in-bash-script
 thread_count=$1;
+# take domain to use for CheckM taxonomy
+checkm_domain_id=$2;
 
 
 ### Running CheckM
@@ -38,7 +40,7 @@ ls results/MAGs/PerCohort/*/*_metabat2_minContig1500.1.fa | while read file; do
 	mkdir -p results/MAG_QC/PerCohort/${parentname}; #create an output directory
 	# now run CheckM
 	apptainer exec workflow/containers/mag_assembly_qc.sif checkm taxonomy_wf \
-	-x fa -t $1 domain Bacteria results/MAGs/PerCohort/${parentname} \
+	-x fa -t $thread_count domain $checkm_domain_id results/MAGs/PerCohort/${parentname} \
 	results/Taxonomy/PerCohort/${parentname}; 
 done;
 
