@@ -6,8 +6,9 @@ _A Snakemake Pipeline to Output meTagenomics-derived Biosynthetic Gene Clusters_
 
 Author: Vi Varga
 
+Current version: 3.1.0
 
-Last Major Update: 2025.08.02
+Last Major Update: 2025.10.22
 
 
 ## Introduction 
