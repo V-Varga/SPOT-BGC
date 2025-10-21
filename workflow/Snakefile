@@ -1,9 +1,9 @@
 # Snakefile for SPOT-BGC workflow pipeline
 
 # Author: Vi Varga
-# Last edit date: 2025.07.30
+# Last edit date: 2025.10.22
 
-# SPOT-BGC v.3.0.0
+# SPOT-BGC v.3.1.0
 # originally written in PyCharm Community Edition version 2024.3.1.1
 # SLURM functionality confirmed in Visual Studio Code 1.102.3
 # developed using Snakemake version 8.27.1
@@ -91,7 +91,7 @@ rule all:
 		'logs/MetaSPAdes/MetaSPAdes_PE_completion.txt',
 		expand('logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt',
 			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True),
-		'logs/MetaSPAdes/MetaSPAdes_PE_completion.txt',
+		'logs/MetaSPAdes/MetaSPAdes_SE_completion.txt',
 		'results/Assembly/PerCohort/MEGAHIT_Tracking_SE.txt',
 		'results/Assembly/PerCohort/MEGAHIT_Tracking_PE.txt',
 		'results/Assembly/PerCohort/MEGAHIT_Tracking_PEandSE.txt',
@@ -166,9 +166,9 @@ rule multiqc_1:
 
 # quality trimming of FASTQ files
 # rule trim_files_pe handles trimming paired-end reads
-# this rule and preceeding should be possible to skip
 rule trim_files_pe:
 	input:
+		# lambda wildcards: expand("{species}_{rep}", species=[wildcards.species], rep=get_reps(wildcards.species))
 		fq1 = "resources/RawData/{cohort_id}/{sample_name,[A-Za-z0-9]+}/{sample_name,[A-Za-z0-9]+}_1.fastq",
 		fq2 = "resources/RawData/{cohort_id}/{sample_name,[A-Za-z0-9]+}/{sample_name,[A-Za-z0-9]+}_2.fastq"
 	output:
@@ -195,7 +195,6 @@ rule trim_files_pe:
 		"""
 
 # rule trim_files_se handles trimming paired-end reads
-# this rule and preceeding should be possible to skip
 rule trim_files_se:
 	input:
 		fq_se = "resources/RawData/{cohort_id}/{sample_name,[A-Za-z0-9]+}/{sample_name,[A-Za-z0-9]+}.fastq"
@@ -255,7 +254,7 @@ rule index_genome:
 	output:
 		multiext("resources/Ref/GCA_000001405__29_GRCh38__p14_masked",
 			".1.bt2",	".2.bt2", ".3.bt2", ".4.bt2",
-			".rev.1.bt2", ".rev.2.bt2"),
+			".rev.1.bt2", ".rev.2.bt2")
 	threads: config['threads_bowtie_index']
 	log:
 		"logs/Bowtie2/genome_index_log.txt"
@@ -271,8 +270,8 @@ rule index_genome:
 rule map_reads_pe:
 	input:
 		idx = rules.index_genome.output,
-		trimmed_fq1 = lambda wildcards: fq_R1_names_df.loc[wildcards.cohort_with_sample, 'Location_Trim'],
-		trimmed_fq2 = lambda wildcards: fq_R2_names_df.loc[wildcards.cohort_with_sample, 'Location_Trim']
+		trimmed_fq1 = lambda wildcards: f"results/Trimmomatic/{fq_R1_names_df.loc[wildcards.cohort_with_sample, 'CohortSample']}.1.fastq",
+		trimmed_fq2 = lambda wildcards: f"results/Trimmomatic/{fq_R2_names_df.loc[wildcards.cohort_with_sample, 'CohortSample']}.2.fastq"
 	output:
 		human_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_human_map.sam",
 		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_Metrics.txt",
@@ -299,7 +298,7 @@ rule map_reads_pe:
 rule map_reads_se:
 	input:
 		idx = rules.index_genome.output,
-		trimmed_fqse = lambda wildcards: fq_SE_names_df.loc[wildcards.cohort_with_sample, 'Location_Trim']
+		trimmed_fqse = lambda wildcards: f"results/Trimmomatic/{fq_SE_names_df.loc[wildcards.cohort_with_sample, 'CohortSample']}.SE.fastq"
 	output:
 		human_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_human_map.sam",
 		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_Metrics.txt",
@@ -324,20 +323,21 @@ rule map_reads_se:
 # rule bbnorm_pe normalizes PE reads
 rule bbnorm_pe:
 	input:
-		mapped_fq1 = lambda wildcards: fq_R1_names_df.loc[wildcards.cohort_mapped_with_sample, 'Location_NonHuman'],
-		mapped_fq2 = lambda wildcards: fq_R2_names_df.loc[wildcards.cohort_mapped_with_sample, 'Location_NonHuman']
+		mapped_fq1 = lambda wildcards: f"results/DataNonHuman/NonHumanOG/{fq_R1_names_df.loc[wildcards.cohort_with_sample,'CohortSample']}_NON-human_map.1.fq",
+		mapped_fq2 = lambda wildcards: f"results/DataNonHuman/NonHumanOG/{fq_R2_names_df.loc[wildcards.cohort_with_sample,'CohortSample']}_NON-human_map.2.fq"
 	output:
-		input_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_NON-human_map_input_kmers.png",
-		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_NON-human_map_output_kmers.png",
-		normalized_fq1 = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_norm.1.fq",
-		normalized_fq2 = "results/DataNonHuman/BBNorm_Reads/{cohort_mapped_with_sample}_norm.2.fq"
+		input_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_input_kmers.png",
+		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_output_kmers.png",
+		normalized_fq1 = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
+		normalized_fq2 = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
+		pe_completion = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.pe.COMPLETE"
 	threads: config['threads_bbnorm']
 	resources:
 		mem_mb = config['memory_maximum']
 	params:
 		memory_alloc = config['bbnorm_memory']
 	log:
-		"logs/BBnorm/{cohort_mapped_with_sample}_read_mapping_log.txt"
+		"logs/BBnorm/{cohort_with_sample}_read_mapping_log.txt"
 	shell:
 		"""
 		apptainer exec workflow/containers/bbtools.sif /bbmap/bbnorm.sh {params.memory_alloc} \
@@ -345,16 +345,19 @@ rule bbnorm_pe:
 		out={output.normalized_fq1} out2={output.normalized_fq2} \
 		target=80 min=3 threads={threads} \
 		hist={output.input_kmers} histout={output.output_kmers}
+		
+		touch {output.pe_completion}
 		"""
 
 # rule bbnorm_se normalizes SE reads
 rule bbnorm_se:
 	input:
-		mapped_fqse = lambda wildcards: fq_SE_names_df.loc[wildcards.cohort_with_sample, 'Location_NonHuman']
+		mapped_fqse = lambda wildcards: f"results/DataNonHuman/NonHumanOG/{fq_SE_names_df.loc[wildcards.cohort_with_sample,'CohortSample']}_NON-human_map.SE.fq"
 	output:
 		input_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_input_kmers.png",
 		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_output_kmers.png",
-		normalized_fqse = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq"
+		normalized_fqse = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
+		se_completion = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.se.COMPLETE"
 	threads: config['threads_bbnorm']
 	resources:
 		mem_mb = config['memory_maximum']
@@ -367,6 +370,8 @@ rule bbnorm_se:
 		apptainer exec workflow/containers/bbtools.sif /bbmap/bbnorm.sh {params.memory_alloc} \
 		in={input.mapped_fqse} out={output.normalized_fqse} threads={threads} \
 		target=80 min=3 hist={output.input_kmers} histout={output.output_kmers}
+		
+		touch {output.se_completion}
 		"""
 
 
@@ -374,12 +379,16 @@ rule bbnorm_se:
 rule filt_100k:
 	input:
 		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
-			cohort_with_sample = fq_R1_names_df.CohortSample),
+			cohort_with_sample = fq_R1_names_df["CohortSample"]),
 		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
-			cohort_with_sample = fq_R1_names_df.CohortSample),
+			cohort_with_sample = fq_R1_names_df["CohortSample"]),
 		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
-			cohort_with_sample = fq_SE_names_df.CohortSample),
-		filtering_script = 'workflow/scripts/snakemake_100k_filt.sh',
+			cohort_with_sample = fq_SE_names_df["CohortSample"]),
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.pe.COMPLETE",
+			cohort_with_sample = fq_R1_names_df["CohortSample"]),
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.se.COMPLETE",
+			cohort_with_sample = fq_SE_names_df["CohortSample"]),
+		filtering_script = 'workflow/scripts/snakemake_100k_filt.sh'
 	log:
 		filt_100k_log = 'logs/100k_filt.txt'
 	output:
@@ -397,12 +406,14 @@ rule assembly_perSample_pe:
 		'logs/MetaSPAdes/MetaSPAdes_PE_completion.txt'
 	resources:
 		mem_mb = config['memory_maximum']
+	params:
+		metaspades_timout_time = config['metaspades_timeout']
 	log:
 		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_pe_log.txt",
 			cohort_norm_sample=fq_R1_names_df.CohortSample,allow_missing=True)
 	threads: config['threads_metaspades']
 	shell:
-		"bash workflow/scripts/snakemake_metaspades_pe_safe.sh {threads}"
+		"bash workflow/scripts/snakemake_metaspades_pe_safe.sh {threads} {params.metaspades_timout_time}"
 
 # rule assembly_perSample_se performs per-sample assembly with MetaSPAdes
 rule assembly_perSample_se:
@@ -412,12 +423,14 @@ rule assembly_perSample_se:
 		'logs/MetaSPAdes/MetaSPAdes_SE_completion.txt'
 	resources:
 		mem_mb = config['memory_maximum']
+	params:
+		metaspades_timout_time = config['metaspades_timeout']
 	log:
 		expand("logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt",
 			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True)
 	threads: config['threads_metaspades']
 	shell:
-		"bash workflow/scripts/snakemake_metaspades_se_safe.sh {threads}"
+		"bash workflow/scripts/snakemake_metaspades_se_safe.sh {threads} {params.metaspades_timout_time}"
 
 
 # rule assembly_perCohort_peANDse performs per-cohort paired- & single-end assembly with MEGAHIT
@@ -472,7 +485,7 @@ rule assembly_perCohort_se:
 # should be possible to skip all previous steps
 rule kraken_copyDB:
 	output:
-		kraken_cp_log = 'logs/AssemblyNonHuman_cp_db.txt',
+		kraken_cp_log = 'logs/AssemblyNonHuman_cp_db.txt'
 	shell:
 		"""
 		apptainer exec workflow/containers/env-kraken2db.sif cp -r /kraken2_human_db/ resources/ \
@@ -573,8 +586,10 @@ rule taxa_perCohort:
 	log:
 		"logs/Taxonomy/PerCohort/checkm_taxa_cohort.log"
 	threads: config['threads_checkm']
+	params:
+		checkm_search_domain = config['checkm_domain']
 	shell:
-		"bash workflow/scripts/snakemake_checkm_taxa_cohort.sh {threads}"
+		"bash workflow/scripts/snakemake_checkm_taxa_cohort.sh {threads} {params.checkm_search_domain}"
 
 # rule taxa_perCohort should use Metaphlan to assign MAGs to taxa in the per-cohort assemblies
 rule taxa_perSample:
@@ -583,8 +598,10 @@ rule taxa_perSample:
 	log:
 		"logs/Taxonomy/PerSample/checkm_taxa_sample.log"
 	threads: config['threads_checkm']
+	params:
+		checkm_search_domain = config['checkm_domain']
 	shell:
-		"bash workflow/scripts/snakemake_checkm_taxa_sample.sh {threads}"
+		"bash workflow/scripts/snakemake_checkm_taxa_sample.sh {threads} {params.checkm_search_domain}"
 
 
 # BGC predictions
