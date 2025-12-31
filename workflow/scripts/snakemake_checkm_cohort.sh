@@ -23,11 +23,12 @@
 # take thread count as positional argument
 # ref: https://www.baeldung.com/linux/use-command-line-arguments-in-bash-script
 thread_count=$1;
+metabat_ext=$2;
 
 
 ### Running CheckM
 # run these in a while loop
-ls results/MAGs/PerCohort/*/*_metabat2_minContig1500.1.fa | while read file; do
+ls results/MAGs/PerCohort/*/*_${metabat_ext}.1.fa | while read file; do
 	# first designate variables & directories
 	parentname="$(basename "$(dirname "$file")")"; # this gets the parent/cohort directory name
 	mkdir -p results/MAG_QC/PerCohort/${parentname}; #create an output directory

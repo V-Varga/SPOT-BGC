@@ -25,7 +25,7 @@
 thread_count=$1;
 # take domain to use for CheckM taxonomy
 checkm_domain_id=$2;
-
+metabat_ext=$3;
 
 ### Running CheckM
 
@@ -34,7 +34,7 @@ apptainer exec workflow/containers/mag_assembly_qc.sif checkm taxon_list;
 
 
 # run these in a while loop
-ls results/MAGs/PerSample/*/*/*_metabat2_minContig1500.1.fa | while read file; do
+ls results/MAGs/PerSample/*/*/*_${metabat_ext}.1.fa | while read file; do
 	# first designate variables & directories
 	parentname="$(dirname "$(dirname "$file")")"; 
 	grandparent_dir="${parentname##*/}"; # this gets the grandparent/cohort directory name

@@ -533,9 +533,10 @@ rule binning_perSample:
 		"logs/MAGs/PerSample/metabat.log"
 	threads: config['threads_metabat']
 	params:
-		bin_size = config['metabat_bin_size']
+		bin_size = config['metabat_bin_size'], 
+		out_extension = config['metabat_extension']
 	shell:
-		"bash workflow/scripts/snakemake_metabat_sample.sh {threads} {params.bin_size}"
+		"bash workflow/scripts/snakemake_metabat_sample.sh {threads} {params.bin_size} {params.out_extension}"
 
 # rule binning_perCohort bins the contigs into MAGs for the per-cohort assembly
 rule binning_perCohort:
@@ -547,9 +548,10 @@ rule binning_perCohort:
 		"logs/MAGs/PerCohort/metabat.log"
 	threads: config['threads_metabat']
 	params:
-		bin_size = config['metabat_bin_size']
+		bin_size = config['metabat_bin_size'], 
+		out_extension = config['metabat_extension']
 	shell:
-		"bash workflow/scripts/snakemake_metabat_cohort.sh {threads} {params.bin_size}"
+		"bash workflow/scripts/snakemake_metabat_cohort.sh {threads} {params.bin_size} {params.out_extension}"
 
 
 # quality checking of the assembled MAGs
@@ -560,8 +562,10 @@ rule mag_qc_perSample:
 	log:
 		"logs/MAG_QC/PerSample/CheckM.log"
 	threads: config['threads_checkm']
+	params:
+		out_extension = config['metabat_extension']
 	shell:
-		"bash workflow/scripts/snakemake_checkm_sample.sh {threads}"
+		"bash workflow/scripts/snakemake_checkm_sample.sh {threads} {params.out_extension}"
 
 # rule mag_qc_perCohort checks the quality of the per-cohort MAG assemblies
 rule mag_qc_perCohort:
@@ -570,8 +574,10 @@ rule mag_qc_perCohort:
 	log:
 		"logs/MAG_QC/PerCohort/CheckM.log"
 	threads: config['threads_checkm']
+	params:
+		out_extension = config['metabat_extension']
 	shell:
-		"bash workflow/scripts/snakemake_checkm_cohort.sh {threads}"
+		"bash workflow/scripts/snakemake_checkm_cohort.sh {threads} {params.out_extension}"
 
 
 # possible future pipeline update: MAG dereplication step with drep
@@ -587,9 +593,10 @@ rule taxa_perCohort:
 		"logs/Taxonomy/PerCohort/checkm_taxa_cohort.log"
 	threads: config['threads_checkm']
 	params:
-		checkm_search_domain = config['checkm_domain']
+		checkm_search_domain = config['checkm_domain'], 
+		out_extension = config['metabat_extension']
 	shell:
-		"bash workflow/scripts/snakemake_checkm_taxa_cohort.sh {threads} {params.checkm_search_domain}"
+		"bash workflow/scripts/snakemake_checkm_taxa_cohort.sh {threads} {params.checkm_search_domain} {params.out_extension}"
 
 # rule taxa_perCohort should use Metaphlan to assign MAGs to taxa in the per-cohort assemblies
 rule taxa_perSample:
@@ -599,9 +606,10 @@ rule taxa_perSample:
 		"logs/Taxonomy/PerSample/checkm_taxa_sample.log"
 	threads: config['threads_checkm']
 	params:
-		checkm_search_domain = config['checkm_domain']
+		checkm_search_domain = config['checkm_domain'], 
+		out_extension = config['metabat_extension']
 	shell:
-		"bash workflow/scripts/snakemake_checkm_taxa_sample.sh {threads} {params.checkm_search_domain}"
+		"bash workflow/scripts/snakemake_checkm_taxa_sample.sh {threads} {params.checkm_search_domain} {params.out_extension}"
 
 
 # BGC predictions
@@ -612,8 +620,10 @@ rule gecco_perSample:
 	log:
 		"logs/BGCs/PerSample/gecco.log"
 	threads: config['threads_gecco']
+	params:
+		out_extension = config['metabat_extension']
 	shell:
-		"bash workflow/scripts/snakemake_gecco_sample.sh {threads}"
+		"bash workflow/scripts/snakemake_gecco_sample.sh {threads} {params.out_extension}"
 
 # rule gecco_perCohort should run BGC analysis using GECCO for the per-cohort assemblies
 rule gecco_perCohort:
@@ -622,8 +632,10 @@ rule gecco_perCohort:
 	log:
 		"logs/BGCs/PerCohort/gecco.log"
 	threads: config['threads_gecco']
+	params:
+		out_extension = config['metabat_extension']
 	shell:
-		"bash workflow/scripts/snakemake_gecco_cohort.sh {threads}"
+		"bash workflow/scripts/snakemake_gecco_cohort.sh {threads} {params.out_extension}"
 
 
 # rule antismash_perSample should run BGC analysis using AntiSMASH for the per-sample assemblies
@@ -633,8 +645,10 @@ rule antismash_perSample:
 	log:
 		"logs/BGCs/PerSample/antismash.log"
 	threads: config['threads_antismash']
+	params:
+		out_extension = config['metabat_extension']
 	shell:
-		"bash workflow/scripts/snakemake_antismash_sample.sh {threads}"
+		"bash workflow/scripts/snakemake_antismash_sample.sh {threads} {params.out_extension}"
 
 # rule antismash_perCohort should run BGC analysis using AntiSMASH for the per-cohort assemblies
 rule antismash_perCohort:
@@ -643,8 +657,10 @@ rule antismash_perCohort:
 	log:
 		"logs/BGCs/PerCohort/antismash.log"
 	threads: config['threads_antismash']
+	params:
+		out_extension = config['metabat_extension']
 	shell:
-		"bash workflow/scripts/snakemake_antismash_cohort.sh {threads}"
+		"bash workflow/scripts/snakemake_antismash_cohort.sh {threads} {params.out_extension}"
 
 
 ## Part 4: Notify the user of completion

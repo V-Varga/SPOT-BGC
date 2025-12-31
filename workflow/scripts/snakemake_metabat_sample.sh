@@ -23,6 +23,8 @@
 # take thread count as positional argument
 # ref: https://www.baeldung.com/linux/use-command-line-arguments-in-bash-script
 thread_count=$1;
+metabat_bin=$2;
+metabat_ext=$3;
 
 
 ### Running MetaBAT
@@ -37,8 +39,8 @@ ls results/AssemblyNonHuman/PerSample/*/[[:upper:]]*/*_nonHuman.fasta | while re
 	file_base_id="$( cut -d "_" -f 1 <<< "$file_base" )"; #this selects only the sample ID from the name
 	mkdir -p results/MAGs/PerSample/${grandparent_dir}/${file_base_id}; #create an output directory
 	# now run MetaBAT
-	apptainer exec workflow/containers/metagenome_assembly.sif metabat2 -i $file -m 1500 -t $thread_count \
-	-o results/MAGs/PerSample/${grandparent_dir}/${file_base_id}/${file_base_id}_metabat2_minContig1500; 
+	apptainer exec workflow/containers/metagenome_assembly.sif metabat2 -i $file -m $metabat_bin -t $thread_count \
+	-o results/MAGs/PerSample/${grandparent_dir}/${file_base_id}/${file_base_id}_${metabat_ext}; 
 done;
 
 
