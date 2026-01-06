@@ -1,9 +1,9 @@
 # Snakefile for SPOT-BGC workflow pipeline
 
 # Author: Vi Varga
-# Last edit date: 2025.10.22
+# Last edit date: 2026.01.06
 
-# SPOT-BGC v.3.1.0
+# SPOT-BGC v.3.1.1
 # originally written in PyCharm Community Edition version 2024.3.1.1
 # SLURM functionality confirmed in Visual Studio Code 1.102.3
 # developed using Snakemake version 8.27.1
@@ -628,7 +628,7 @@ rule gecco_perSample:
 # rule gecco_perCohort should run BGC analysis using GECCO for the per-cohort assemblies
 rule gecco_perCohort:
 	input:
-		rules.binning_perSample.output
+		rules.binning_perCohort.output
 	log:
 		"logs/BGCs/PerCohort/gecco.log"
 	threads: config['threads_gecco']
@@ -653,7 +653,7 @@ rule antismash_perSample:
 # rule antismash_perCohort should run BGC analysis using AntiSMASH for the per-cohort assemblies
 rule antismash_perCohort:
 	input:
-		rules.binning_perSample.output
+		rules.binning_perCohort.output
 	log:
 		"logs/BGCs/PerCohort/antismash.log"
 	threads: config['threads_antismash']

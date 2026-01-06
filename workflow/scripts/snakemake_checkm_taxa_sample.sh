@@ -41,7 +41,7 @@ ls results/MAGs/PerSample/*/*/*_${metabat_ext}.1.fa | while read file; do
 	full_file="${file##*/}"; #this line removes the path before the file name
 	file_base="${full_file%.*}"; #this line removes the file extension .fa
 	file_base2="${file_base%.*}"; #this line removes the file extension .1
-	file_base_id="${file_base2%_metabat2_minContig1500}"; #this removes the "_metabat2_minContig1500" substring
+	file_base_id="${file_base2%_${metabat_ext}}"; #this removes the "_metabat2_minContig1500" substring
 	mkdir -p results/Taxonomy/PerSample/${grandparent_dir}/${file_base_id}; #create an output directory
 	# now run CheckM
 	apptainer exec workflow/containers/mag_assembly_qc.sif checkm taxonomy_wf \
