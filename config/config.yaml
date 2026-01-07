@@ -42,7 +42,9 @@ threads_antismash: 5
 
 metaspades_timeout: '6h'
 
-metabat_bin_size: 10000
+metabat_bin_size: 1500
+
+metabat_extension: 'metabat2_minContig1500'
 
 bbnorm_memory: '-Xmx40G'
 

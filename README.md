@@ -6,9 +6,9 @@ _A Snakemake Pipeline to Output meTagenomics-derived Biosynthetic Gene Clusters_
 
 Author: Vi Varga
 
-Current version: 3.1.0
+Current version: 3.1.1
 
-Last Major Update: 2025.10.22
+Last Major Update: 2026.01.06
 
 
 ## Introduction 
@@ -191,6 +191,17 @@ snakemake --executor slurm --jobs 10 --profile=profiles/slurm --use-singularity 
 
 ### Current release version
 
+Minor QoL updates & bug fixes, 2026.01.06: Build 3.1.1
+ - `config.yaml`, `Snakefile` and various scripts updated to allow user to specify the MAG bin size and associated MAG file extension
+ - Fixed a minor bug in the `Snakefile` where the per-Cohort BGC prediction inputs were incorrectly specified to be the per-Sample binning outputs
+
+### Ongoing work for future versions
+
+Potential future plans (no set date):
+ - Branching pipeline: Allow user to choose which programs in the later parts of the pipeline actually need to be run.
+
+### Logs of previous major updates
+
 Wildcard patch & minor updates, 2025.10.22: Build 3.1.0
  - Patch wildcard usage: Resolved issues relating to wildcard inconsistency that was causing the pipeline to occasionally crash
    - I received help from StackOverflow contributors in this process: 
@@ -200,13 +211,6 @@ Wildcard patch & minor updates, 2025.10.22: Build 3.1.0
    - GECCO: writing out GFF results files by default for easier parsing
    - Working directory cleaning: The `workflow/scripts/snakemake_cleanup.sh` script can now be used to clean the SPOT-BGC working directory prior to rerunning the pipeline (i.e., removing old results & log files, deleting the files in `resources/RawData/` etc.)
    - Additions to `config.yaml` file: MetaSPAdes timeout time, domain selection for CheckM taxonomy
-
-### Ongoing work for future versions
-
-Potential future plans (no set date):
- - Branching pipeline: Allow user to choose which programs in the later parts of the pipeline actually need to be run.
-
-### Logs of previous major updates
 
 Second major update, 2025.08.02: Build 3.0.0
  - Ensured SLURM HPC environmental compliance & functionality.

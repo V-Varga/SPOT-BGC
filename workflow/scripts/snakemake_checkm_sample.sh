@@ -23,18 +23,19 @@
 # take thread count as positional argument
 # ref: https://www.baeldung.com/linux/use-command-line-arguments-in-bash-script
 thread_count=$1;
+metabat_ext=$2;
 
 
 ### Running CheckM
 # run these in a while loop
-ls results/MAGs/PerSample/*/*/*_metabat2_minContig1500.1.fa | while read file; do
+ls results/MAGs/PerSample/*/*/*_${metabat_ext}.1.fa | while read file; do
 	# first designate variables & directories
 	parentname="$(dirname "$(dirname "$file")")"; 
 	grandparent_dir="${parentname##*/}"; # this gets the grandparent/cohort directory name
 	full_file="${file##*/}"; #this line removes the path before the file name
 	file_base="${full_file%.*}"; #this line removes the file extension .fa
 	file_base2="${file_base%.*}"; #this line removes the file extension .1
-	file_base_id="${file_base2%_metabat2_minContig1500}"; #this removes the "_metabat2_minContig1500" substring
+	file_base_id="${file_base2%_${metabat_ext}}"; #this removes the "_metabat2_minContig1500" substring
 	mkdir -p results/MAG_QC/PerSample/${grandparent_dir}/${file_base_id}; #create an output directory
 	# now run CheckM
 	apptainer exec workflow/containers/mag_assembly_qc.sif checkm lineage_wf --nt \
