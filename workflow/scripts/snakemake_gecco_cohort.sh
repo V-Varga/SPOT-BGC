@@ -28,7 +28,7 @@ metabat_ext=$2;
 
 ### Running GECCO
 # run these in a while loop
-ls results/MAGs/PerCohort/*/*_{metabat_ext}.*.fa | while read file; do
+ls results/MAGs/PerCohort/*/*_${metabat_ext}.*.fa | while read file; do
 	# first designate variables & directories
 	parentname="$(basename "$(dirname "$file")")"; # this gets the parent/cohort directory name
 	mkdir -p results/BGCs/GECCO/PerCohort/${parentname}; #create an output directory
