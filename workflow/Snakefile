@@ -168,25 +168,22 @@ rule multiqc_1:
 # rule trim_files_pe handles trimming paired-end reads
 rule trim_files_pe:
 	input:
-		# lambda wildcards: expand("{species}_{rep}", species=[wildcards.species], rep=get_reps(wildcards.species))
-		fq1 = "resources/RawData/{cohort_id}/{sample_name,[A-Za-z0-9]+}/{sample_name,[A-Za-z0-9]+}_1.fastq",
-		fq2 = "resources/RawData/{cohort_id}/{sample_name,[A-Za-z0-9]+}/{sample_name,[A-Za-z0-9]+}_2.fastq"
+		fq1 = "resources/RawData/{cohort_id}/{sample_id}/{sample_id}_1.fastq",
+		fq2 = "resources/RawData/{cohort_id}/{sample_id}/{sample_id}_2.fastq"
 	output:
-		r1= "results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}.1.fastq",
-		r2="results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}.2.fastq",
-		# reads where trimming entirely removed the mate
-		r1_unpaired="results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}.1.unpaired.fastq",
-		r2_unpaired="results/Trimmomatic/{cohort_id}/{sample_name}.2.unpaired.fastq",
-		# summary file
-		trim_summary_pe="results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_summary.txt"
+		r1 = "results/Trimmomatic/{cohort_id}/{sample_id}.1.fastq",
+		r2 = "results/Trimmomatic/{cohort_id}/{sample_id}.2.fastq",
+		r1_unpaired = "results/Trimmomatic/{cohort_id}/{sample_id}.1.unpaired.fastq",
+		r2_unpaired = "results/Trimmomatic/{cohort_id}/{sample_id}.2.unpaired.fastq",
+		trim_summary_pe = "results/Trimmomatic/{cohort_id}/{sample_id}_summary.txt"
 	threads: config['threads_trimming']
 	log:
-		"logs/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_log.txt"
+		"logs/Trimmomatic/{cohort_id}/{sample_id}_log.txt"
 	singularity:
 		"workflow/containers/env-trimmomatic.sif"
 	shell:
 		"""
-		trimmomatic PE -threads {threads} -trimlog {log} -summary {output.trim_summary_pe}\
+		trimmomatic PE -threads {threads} -trimlog {log} -summary {output.trim_summary_pe} \
 		{input.fq1} {input.fq2} \
 		{output.r1} {output.r1_unpaired} \
 		{output.r2} {output.r2_unpaired} \
@@ -197,19 +194,18 @@ rule trim_files_pe:
 # rule trim_files_se handles trimming paired-end reads
 rule trim_files_se:
 	input:
-		fq_se = "resources/RawData/{cohort_id}/{sample_name,[A-Za-z0-9]+}/{sample_name,[A-Za-z0-9]+}.fastq"
+		fq_se = "resources/RawData/{cohort_id}/{sample_id}/{sample_id}.fastq"
 	output:
-		trimmed_se= "results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}.SE.fastq",
-		# summary file
-		trim_summary_pe="results/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_summary.txt"
+		trimmed_se = "results/Trimmomatic/{cohort_id}/{sample_id}.SE.fastq",
+		trim_summary_se = "results/Trimmomatic/{cohort_id}/{sample_id}_summary.txt"
 	threads: config['threads_trimming']
 	log:
-		"logs/Trimmomatic/{cohort_id}/{sample_name,[A-Za-z0-9]+}_log.txt"
+		"logs/Trimmomatic/{cohort_id}/{sample_id}_log.txt"
 	singularity:
 		"workflow/containers/env-trimmomatic.sif"
 	shell:
 		"""
-		trimmomatic SE -threads {threads} -trimlog {log} -summary {output.trim_summary_pe} \
+		trimmomatic SE -threads {threads} -trimlog {log} -summary {output.trim_summary_se} \
 		{input.fq_se} {output.trimmed_se} \
 		ILLUMINACLIP:TruSeq3-SE.fa:3:30:10:1:TRUE \
 		TRAILING:20 SLIDINGWINDOW:4:20 MINLEN:51
@@ -270,18 +266,18 @@ rule index_genome:
 rule map_reads_pe:
 	input:
 		idx = rules.index_genome.output,
-		trimmed_fq1 = lambda wildcards: f"results/Trimmomatic/{fq_R1_names_df.loc[wildcards.cohort_with_sample, 'CohortSample']}.1.fastq",
-		trimmed_fq2 = lambda wildcards: f"results/Trimmomatic/{fq_R2_names_df.loc[wildcards.cohort_with_sample, 'CohortSample']}.2.fastq"
+		trimmed_fq1 = "results/Trimmomatic/{cohort_id}/{sample_id}.1.fastq",
+		trimmed_fq2 = "results/Trimmomatic/{cohort_id}/{sample_id}.2.fastq"
 	output:
-		human_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_human_map.sam",
-		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_Metrics.txt",
-		non_human_fq1 = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.1.fq",
-		non_human_fq2 = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.2.fq"
+		human_reads = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_human_map.sam",
+		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_Metrics.txt",
+		non_human_fq1 = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_NON-human_map.1.fq",
+		non_human_fq2 = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_NON-human_map.2.fq"
 	params:
-		unmapped_file_basename = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.fq"
+		unmapped_file_basename = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_NON-human_map.fq"
 	threads: config['threads_bowtie']
 	log:
-		"logs/Bowtie2/{cohort_with_sample}_read_mapping_log.txt"
+		"logs/Bowtie2/{cohort_id}/{sample_id}_read_mapping_log.txt"
 	singularity:
 		"workflow/containers/env-bowtie2.sif"
 	shell:
@@ -298,14 +294,14 @@ rule map_reads_pe:
 rule map_reads_se:
 	input:
 		idx = rules.index_genome.output,
-		trimmed_fqse = lambda wildcards: f"results/Trimmomatic/{fq_SE_names_df.loc[wildcards.cohort_with_sample, 'CohortSample']}.SE.fastq"
+		trimmed_fqse = "results/Trimmomatic/{cohort_id}/{sample_id}.SE.fastq"
 	output:
-		human_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_human_map.sam",
-		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_Metrics.txt",
-		non_human_fqSE = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.SE.fq"
+		human_reads = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_human_map.sam",
+		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_Metrics.txt",
+		non_human_fqSE = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_NON-human_map.SE.fq"
 	threads: config['threads_bowtie']
 	log:
-		"logs/Bowtie2/{cohort_with_sample}_read_mapping_log.txt"
+		"logs/Bowtie2/{cohort_id}/{sample_id}_read_mapping_log.txt"
 	singularity:
 		"workflow/containers/env-bowtie2.sif"
 	shell:
@@ -323,21 +319,21 @@ rule map_reads_se:
 # rule bbnorm_pe normalizes PE reads
 rule bbnorm_pe:
 	input:
-		mapped_fq1 = lambda wildcards: f"results/DataNonHuman/NonHumanOG/{fq_R1_names_df.loc[wildcards.cohort_with_sample,'CohortSample']}_NON-human_map.1.fq",
-		mapped_fq2 = lambda wildcards: f"results/DataNonHuman/NonHumanOG/{fq_R2_names_df.loc[wildcards.cohort_with_sample,'CohortSample']}_NON-human_map.2.fq"
+		mapped_fq1 = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_NON-human_map.1.fq",
+		mapped_fq2 = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_NON-human_map.2.fq"
 	output:
-		input_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_input_kmers.png",
-		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_output_kmers.png",
-		normalized_fq1 = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
-		normalized_fq2 = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
-		pe_completion = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.pe.COMPLETE"
+		input_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}_NON-human_map_input_kmers.png",
+		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}_NON-human_map_output_kmers.png",
+		normalized_fq1 = "results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}_norm.1.fq",
+		normalized_fq2 = "results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}_norm.2.fq",
+		pe_completion = "results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}.pe.COMPLETE"
 	threads: config['threads_bbnorm']
 	resources:
 		mem_mb = config['memory_maximum']
 	params:
 		memory_alloc = config['bbnorm_memory']
 	log:
-		"logs/BBnorm/{cohort_with_sample}_read_mapping_log.txt"
+		"logs/BBnorm/{cohort_id}/{sample_id}_read_mapping_log.txt"
 	shell:
 		"""
 		apptainer exec workflow/containers/bbtools.sif /bbmap/bbnorm.sh {params.memory_alloc} \
@@ -352,19 +348,19 @@ rule bbnorm_pe:
 # rule bbnorm_se normalizes SE reads
 rule bbnorm_se:
 	input:
-		mapped_fqse = lambda wildcards: f"results/DataNonHuman/NonHumanOG/{fq_SE_names_df.loc[wildcards.cohort_with_sample,'CohortSample']}_NON-human_map.SE.fq"
+		mapped_fqse = "results/DataNonHuman/NonHumanOG/{cohort_id}/{sample_id}_NON-human_map.SE.fq"
 	output:
-		input_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_input_kmers.png",
-		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_NON-human_map_output_kmers.png",
-		normalized_fqse = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
-		se_completion = "results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.se.COMPLETE"
+		input_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}_NON-human_map_input_kmers.png",
+		output_kmers = "results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}_NON-human_map_output_kmers.png",
+		normalized_fqse = "results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}_norm.SE.fq",
+		se_completion = "results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}.se.COMPLETE"
 	threads: config['threads_bbnorm']
 	resources:
 		mem_mb = config['memory_maximum']
 	params:
 		memory_alloc = config['bbnorm_memory']
 	log:
-		"logs/BBnorm/{cohort_with_sample}_read_mapping_log.txt"
+		"logs/BBnorm/{cohort_id}/{sample_id}_read_mapping_log.txt"
 	shell:
 		"""
 		apptainer exec workflow/containers/bbtools.sif /bbmap/bbnorm.sh {params.memory_alloc} \
@@ -378,8 +374,12 @@ rule bbnorm_se:
 # check that the normalized PE reads are ready
 rule pe_ready:
 	input:
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.pe.COMPLETE",
-			cohort_with_sample = fq_R1_names_df["CohortSample"])
+		expand(
+			"results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}.pe.COMPLETE",
+			zip,
+			cohort_id=fq_R1_names_df["Cohort"],
+			sample_id=fq_R1_names_df["Sample"]
+		)
 	output:
 		"logs/completion/PE_READY.txt"
 	shell:
@@ -388,8 +388,12 @@ rule pe_ready:
 # check that the normalized SE reads are ready
 rule se_ready:
 	input:
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.se.COMPLETE",
-		cohort_with_sample = fq_SE_names_df["CohortSample"])
+		expand(
+			"results/DataNonHuman/BBNorm_Reads/{cohort_id}/{sample_id}.se.COMPLETE",
+			zip,
+			cohort_id=fq_SE_names_df["Cohort"],
+			sample_id=fq_SE_names_df["Sample"]
+		)
 	output:
 		"logs/completion/SE_READY.txt"
 	shell:
@@ -399,16 +403,6 @@ rule se_ready:
 # filter down to files with 100k reads
 rule filt_100k:
 	input:
-		# expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
-		# 	cohort_with_sample = fq_R1_names_df["CohortSample"]),
-		# expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
-		# 	cohort_with_sample = fq_R1_names_df["CohortSample"]),
-		# expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
-		# 	cohort_with_sample = fq_SE_names_df["CohortSample"]),
-		# expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.pe.COMPLETE",
-		# 	cohort_with_sample = fq_R1_names_df["CohortSample"]),
-		# expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.se.COMPLETE",
-		# 	cohort_with_sample = fq_SE_names_df["CohortSample"]),
 		rules.pe_ready.output,
 		rules.se_ready.output,
 		filtering_script = 'workflow/scripts/snakemake_100k_filt.sh'
