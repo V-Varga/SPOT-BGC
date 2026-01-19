@@ -374,20 +374,43 @@ rule bbnorm_se:
 		touch {output.se_completion}
 		"""
 
+# ensure that the SE & PE pruning is complete
+# check that the normalized PE reads are ready
+rule pe_ready:
+	input:
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.pe.COMPLETE",
+			cohort_with_sample = fq_R1_names_df["CohortSample"])
+	output:
+		"logs/completion/PE_READY.txt"
+	shell:
+		"touch {output}"
+
+# check that the normalized SE reads are ready
+rule se_ready:
+	input:
+		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.se.COMPLETE",
+		cohort_with_sample = fq_SE_names_df["CohortSample"])
+	output:
+		"logs/completion/SE_READY.txt"
+	shell:
+		"touch {output}"
+
 
 # filter down to files with 100k reads
 rule filt_100k:
 	input:
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
-			cohort_with_sample = fq_R1_names_df["CohortSample"]),
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
-			cohort_with_sample = fq_R1_names_df["CohortSample"]),
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
-			cohort_with_sample = fq_SE_names_df["CohortSample"]),
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.pe.COMPLETE",
-			cohort_with_sample = fq_R1_names_df["CohortSample"]),
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.se.COMPLETE",
-			cohort_with_sample = fq_SE_names_df["CohortSample"]),
+		# expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
+		# 	cohort_with_sample = fq_R1_names_df["CohortSample"]),
+		# expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
+		# 	cohort_with_sample = fq_R1_names_df["CohortSample"]),
+		# expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
+		# 	cohort_with_sample = fq_SE_names_df["CohortSample"]),
+		# expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.pe.COMPLETE",
+		# 	cohort_with_sample = fq_R1_names_df["CohortSample"]),
+		# expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.se.COMPLETE",
+		# 	cohort_with_sample = fq_SE_names_df["CohortSample"]),
+		rules.pe_ready.output,
+		rules.se_ready.output,
 		filtering_script = 'workflow/scripts/snakemake_100k_filt.sh'
 	log:
 		filt_100k_log = 'logs/100k_filt.txt'
