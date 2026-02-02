@@ -70,8 +70,9 @@ rule all:
 			   cohort_with_sample = fq_SE_names_df.CohortSample),
 		expand('results/QualityChecks/Metagenome_Filt/{cohort_id}/{cohort_id}_multiqc_report.html',
 			   cohort_id=cohort_filebases_df.Cohort),
-		multiext('resources/Ref/{config['reference_short']}','.1.bt2', '.2.bt2', '.3.bt2', '.4.bt2',
-				 '.rev.1.bt2', '.rev.2.bt2'),
+		multiext(f"resources/Ref/{config['reference_short']}", 
+			".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2", 
+			".rev.1.bt2", ".rev.2.bt2"),
 		expand('results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.1.fq',
 			cohort_with_sample = fq_R1_names_df.CohortSample),
 		expand('results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.2.fq',
@@ -252,9 +253,9 @@ rule index_genome:
 	input:
 		ref = config['human_genome']
 	output:
-		multiext("resources/Ref/{config['reference_short']}",
-			".1.bt2",	".2.bt2", ".3.bt2", ".4.bt2",
-			".rev.1.bt2", ".rev.2.bt2")
+		multiext(f"resources/Ref/{config['reference_short']}", 
+		".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2", 
+		".rev.1.bt2", ".rev.2.bt2")
 	threads: config['threads_bowtie_index']
 	log:
 		"logs/Bowtie2/genome_index_log.txt"
