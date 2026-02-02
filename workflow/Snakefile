@@ -70,7 +70,7 @@ rule all:
 			   cohort_with_sample = fq_SE_names_df.CohortSample),
 		expand('results/QualityChecks/Metagenome_Filt/{cohort_id}/{cohort_id}_multiqc_report.html',
 			   cohort_id=cohort_filebases_df.Cohort),
-		multiext('resources/Ref/GCA_000001405__29_GRCh38__p14_masked','.1.bt2', '.2.bt2', '.3.bt2', '.4.bt2',
+		multiext('resources/Ref/{config['reference_short']}','.1.bt2', '.2.bt2', '.3.bt2', '.4.bt2',
 				 '.rev.1.bt2', '.rev.2.bt2'),
 		expand('results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.1.fq',
 			cohort_with_sample = fq_R1_names_df.CohortSample),
@@ -252,7 +252,7 @@ rule index_genome:
 	input:
 		ref = config['human_genome']
 	output:
-		multiext("resources/Ref/GCA_000001405__29_GRCh38__p14_masked",
+		multiext("resources/Ref/{config['reference_short']}",
 			".1.bt2",	".2.bt2", ".3.bt2", ".4.bt2",
 			".rev.1.bt2", ".rev.2.bt2")
 	threads: config['threads_bowtie_index']
@@ -263,7 +263,7 @@ rule index_genome:
 	shell:
 		"""
 		bowtie2-build -f --seed 1234 --threads {threads} \
-		{input.ref} resources/Ref/GCA_000001405__29_GRCh38__p14_masked
+		{input.ref} resources/Ref/{config['reference_short']}
 		"""
 
 # rule map_reads_pe will return non-human PE reads
@@ -278,7 +278,8 @@ rule map_reads_pe:
 		non_human_fq1 = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.1.fq",
 		non_human_fq2 = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.2.fq"
 	params:
-		unmapped_file_basename = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.fq"
+		unmapped_file_basename = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.fq",
+		ref_basename = config['reference_short']
 	threads: config['threads_bowtie']
 	log:
 		"logs/Bowtie2/{cohort_with_sample}_read_mapping_log.txt"
@@ -288,7 +289,8 @@ rule map_reads_pe:
 		"""
 		bowtie2 -q --end-to-end --sensitive \
 		--met-file {output.mapping_metric_reads} --sam-no-qname-trunc \
-		--threads {threads} --seed 7 --time -x resources/Ref/GCA_000001405__29_GRCh38__p14_masked \
+		--threads {threads} --seed 7 --time \
+		-x resources/Ref/{params.ref_basename} \
 		-1 {input.trimmed_fq1} -2 {input.trimmed_fq2} \
 		-S {output.human_reads} \
 		--un-conc {params.unmapped_file_basename}
@@ -304,6 +306,8 @@ rule map_reads_se:
 		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_Metrics.txt",
 		non_human_fqSE = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.SE.fq"
 	threads: config['threads_bowtie']
+	params:
+		ref_basename = config['reference_short']
 	log:
 		"logs/Bowtie2/{cohort_with_sample}_read_mapping_log.txt"
 	singularity:
@@ -312,7 +316,8 @@ rule map_reads_se:
 		"""
 		bowtie2 -q --end-to-end --sensitive \
 		--met-file {output.mapping_metric_reads} --sam-no-qname-trunc \
-		--threads {threads} --seed 7 --time -x resources/Ref/GCA_000001405__29_GRCh38__p14_masked \
+		--threads {threads} --seed 7 --time \
+		-x resources/Ref/{params.ref_basename} \
 		-U {input.trimmed_fqse} \
 		-S {output.human_reads} \
 		--un {output.non_human_fqSE}
