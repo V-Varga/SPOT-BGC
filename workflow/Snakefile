@@ -257,6 +257,8 @@ rule index_genome:
 		".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2", 
 		".rev.1.bt2", ".rev.2.bt2")
 	threads: config['threads_bowtie_index']
+	params:
+		ref_basename = config['reference_short']
 	log:
 		"logs/Bowtie2/genome_index_log.txt"
 	singularity:
@@ -264,7 +266,7 @@ rule index_genome:
 	shell:
 		"""
 		bowtie2-build -f --seed 1234 --threads {threads} \
-		{input.ref} resources/Ref/{config['reference_short']}
+		{input.ref} resources/Ref/{params.ref_basename}
 		"""
 
 # rule map_reads_pe will return non-human PE reads
