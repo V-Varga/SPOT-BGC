@@ -180,7 +180,7 @@ If only paired-end reads are used, the pipeline should be run in 3 steps:
 snakemake --use-singularity --omit-from filt_100k
 bash workflow/scripts/PEonly_REPAIR.sh threads reference_name
 # Please see the PEonly_REPAIR.sh scipt for full details on usage
-snakemake --use-singularity`
+snakemake --use-singularity
 ```
 
 ### Running on a SLURM HPC
