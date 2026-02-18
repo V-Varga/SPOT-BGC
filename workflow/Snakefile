@@ -3,7 +3,7 @@
 # Author: Vi Varga
 # Last edit date: 2026.01.06
 
-# SPOT-BGC v.3.1.1
+# SPOT-BGC v.3.1.2
 # originally written in PyCharm Community Edition version 2024.3.1.1
 # SLURM functionality confirmed in Visual Studio Code 1.102.3
 # developed using Snakemake version 8.27.1
@@ -58,58 +58,59 @@ rule all:
 			cohort_with_sample=cohort_filebases_df.CohortBase_Raw),
 		expand('results/QualityChecks/Metagenome_Origin/{cohort_id}/{cohort_id}_multiqc_report.html',
 			cohort_id=cohort_filebases_df.Cohort),
-		expand('results/Trimmomatic/{cohort_sample}.SE.fastq',
-			cohort_sample=fq_SE_names_df.CohortSample),
-		expand('results/Trimmomatic/{cohort_sample}.1.fastq',
-			cohort_sample=fq_R1_names_df.CohortSample),
-		expand('results/Trimmomatic/{cohort_sample}.2.fastq',
-			cohort_sample=fq_R1_names_df.CohortSample),
+		# expand('results/Trimmomatic/{cohort_sample}.SE.fastq',
+		# 	cohort_sample=fq_SE_names_df.CohortSample),
+		# expand('results/Trimmomatic/{cohort_sample}.1.fastq',
+		# 	cohort_sample=fq_R1_names_df.CohortSample),
+		# expand('results/Trimmomatic/{cohort_sample}.2.fastq',
+		# 	cohort_sample=fq_R1_names_df.CohortSample),
 		expand('results/QualityChecks/Metagenome_Filt/{cohort_with_sample}.{read}_fastqc.html',
 			cohort_with_sample = fq_R1_names_df.CohortSample, read=[1, 2]),
 		expand('results/QualityChecks/Metagenome_Filt/{cohort_with_sample}.SE_fastqc.html',
 			   cohort_with_sample = fq_SE_names_df.CohortSample),
 		expand('results/QualityChecks/Metagenome_Filt/{cohort_id}/{cohort_id}_multiqc_report.html',
 			   cohort_id=cohort_filebases_df.Cohort),
-		multiext('resources/Ref/GCA_000001405__29_GRCh38__p14_masked','.1.bt2', '.2.bt2', '.3.bt2', '.4.bt2',
-				 '.rev.1.bt2', '.rev.2.bt2'),
-		expand('results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.1.fq',
-			cohort_with_sample = fq_R1_names_df.CohortSample),
-		expand('results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.2.fq',
-			cohort_with_sample = fq_R1_names_df.CohortSample),
-		expand('results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.SE.fq',
-			cohort_with_sample = fq_SE_names_df.CohortSample),
-		expand('results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq',
-			cohort_with_sample = fq_R1_names_df.CohortSample),
-		expand('results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq',
-			cohort_with_sample = fq_R1_names_df.CohortSample),
-		expand('results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq',
-			cohort_with_sample = fq_SE_names_df.CohortSample),
+		multiext(f"resources/Ref/{config['reference_short']}", 
+			".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2", 
+			".rev.1.bt2", ".rev.2.bt2"),
+		# expand('results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.1.fq',
+		# 	cohort_with_sample = fq_R1_names_df.CohortSample),
+		# expand('results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.2.fq',
+		# 	cohort_with_sample = fq_R1_names_df.CohortSample),
+		# expand('results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.SE.fq',
+		# 	cohort_with_sample = fq_SE_names_df.CohortSample),
+		# expand('results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq',
+		# 	cohort_with_sample = fq_R1_names_df.CohortSample),
+		# expand('results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq',
+		# 	cohort_with_sample = fq_R1_names_df.CohortSample),
+		# expand('results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq',
+		# 	cohort_with_sample = fq_SE_names_df.CohortSample),
 		'logs/100k_filt.txt',
-		'logs/completion/100k_filt__COMPLETE.txt',
-		expand('logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_pe_log.txt',
-			cohort_norm_sample=fq_R1_names_df.CohortSample, allow_missing=True),
-		'logs/MetaSPAdes/MetaSPAdes_PE_completion.txt',
-		expand('logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt',
-			cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True),
-		'logs/MetaSPAdes/MetaSPAdes_SE_completion.txt',
-		'results/Assembly/PerCohort/MEGAHIT_Tracking_SE.txt',
-		'results/Assembly/PerCohort/MEGAHIT_Tracking_PE.txt',
-		'results/Assembly/PerCohort/MEGAHIT_Tracking_PEandSE.txt',
-		expand('logs/MEGAHIT/{cohort_name}_read_assembly_pe_log.txt',
-			cohort_name=fq_R1_names_df.Cohort),
-		'logs/MEGAHIT/MEGAHIT_PE_completion.txt',
-		expand('logs/MEGAHIT/{cohort_name}_read_assembly_se_log.txt',
-			cohort_name=fq_SE_names_df.Cohort),
-		'logs/MEGAHIT/MEGAHIT_SE_completion.txt',
-		'logs/AssemblyNonHuman_cp_db.txt',
-		'logs/AssemblyNonHuman_recordSample.txt',
-		'logs/completion/Kraken_perSample__COMPLETE.txt',
-		'logs/AssemblyNonHuman_recordCohort.txt',
-		'logs/completion/Kraken_perCohort__COMPLETE.txt',
-		'logs/MAGs/PerSample/metabat.log',
-		'logs/completion/metabat_perSample__COMPLETE.txt',
-		'logs/MAGs/PerCohort/metabat.log',
-		'logs/completion/metabat_perCohort__COMPLETE.txt',
+		# 'logs/completion/100k_filt__COMPLETE.txt',
+		# expand('logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_pe_log.txt',
+		# 	cohort_norm_sample=fq_R1_names_df.CohortSample, allow_missing=True),
+		# 'logs/MetaSPAdes/MetaSPAdes_PE_completion.txt',
+		# expand('logs/MetaSPAdes/{cohort_norm_sample}_read_assembly_se_log.txt',
+		# 	cohort_norm_sample=fq_SE_names_df.CohortSample,allow_missing=True),
+		# 'logs/MetaSPAdes/MetaSPAdes_SE_completion.txt',
+		# 'results/Assembly/PerCohort/MEGAHIT_Tracking_SE.txt',
+		# 'results/Assembly/PerCohort/MEGAHIT_Tracking_PE.txt',
+		# 'results/Assembly/PerCohort/MEGAHIT_Tracking_PEandSE.txt',
+		# expand('logs/MEGAHIT/{cohort_name}_read_assembly_pe_log.txt',
+		# 	cohort_name=fq_R1_names_df.Cohort),
+		# 'logs/MEGAHIT/MEGAHIT_PE_completion.txt',
+		# expand('logs/MEGAHIT/{cohort_name}_read_assembly_se_log.txt',
+		# 	cohort_name=fq_SE_names_df.Cohort),
+		# 'logs/MEGAHIT/MEGAHIT_SE_completion.txt',
+		# 'logs/AssemblyNonHuman_cp_db.txt',
+		# 'logs/AssemblyNonHuman_recordSample.txt',
+		# 'logs/completion/Kraken_perSample__COMPLETE.txt',
+		# 'logs/AssemblyNonHuman_recordCohort.txt',
+		# 'logs/completion/Kraken_perCohort__COMPLETE.txt',
+		# 'logs/MAGs/PerSample/metabat.log',
+		# 'logs/completion/metabat_perSample__COMPLETE.txt',
+		# 'logs/MAGs/PerCohort/metabat.log',
+		# 'logs/completion/metabat_perCohort__COMPLETE.txt',
 		'logs/MAG_QC/PerSample/CheckM.log',
 		'logs/MAG_QC/PerCohort/CheckM.log',
 		'logs/Taxonomy/PerCohort/checkm_taxa_cohort.log',
@@ -252,10 +253,12 @@ rule index_genome:
 	input:
 		ref = config['human_genome']
 	output:
-		multiext("resources/Ref/GCA_000001405__29_GRCh38__p14_masked",
-			".1.bt2",	".2.bt2", ".3.bt2", ".4.bt2",
-			".rev.1.bt2", ".rev.2.bt2")
+		multiext(f"resources/Ref/{config['reference_short']}", 
+		".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2", 
+		".rev.1.bt2", ".rev.2.bt2")
 	threads: config['threads_bowtie_index']
+	params:
+		ref_basename = config['reference_short']
 	log:
 		"logs/Bowtie2/genome_index_log.txt"
 	singularity:
@@ -263,7 +266,7 @@ rule index_genome:
 	shell:
 		"""
 		bowtie2-build -f --seed 1234 --threads {threads} \
-		{input.ref} resources/Ref/GCA_000001405__29_GRCh38__p14_masked
+		{input.ref} resources/Ref/{params.ref_basename}
 		"""
 
 # rule map_reads_pe will return non-human PE reads
@@ -278,7 +281,8 @@ rule map_reads_pe:
 		non_human_fq1 = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.1.fq",
 		non_human_fq2 = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.2.fq"
 	params:
-		unmapped_file_basename = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.fq"
+		unmapped_file_basename = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.fq",
+		ref_basename = config['reference_short']
 	threads: config['threads_bowtie']
 	log:
 		"logs/Bowtie2/{cohort_with_sample}_read_mapping_log.txt"
@@ -288,7 +292,8 @@ rule map_reads_pe:
 		"""
 		bowtie2 -q --end-to-end --sensitive \
 		--met-file {output.mapping_metric_reads} --sam-no-qname-trunc \
-		--threads {threads} --seed 7 --time -x resources/Ref/GCA_000001405__29_GRCh38__p14_masked \
+		--threads {threads} --seed 7 --time \
+		-x resources/Ref/{params.ref_basename} \
 		-1 {input.trimmed_fq1} -2 {input.trimmed_fq2} \
 		-S {output.human_reads} \
 		--un-conc {params.unmapped_file_basename}
@@ -304,6 +309,8 @@ rule map_reads_se:
 		mapping_metric_reads = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_Metrics.txt",
 		non_human_fqSE = "results/DataNonHuman/NonHumanOG/{cohort_with_sample}_NON-human_map.SE.fq"
 	threads: config['threads_bowtie']
+	params:
+		ref_basename = config['reference_short']
 	log:
 		"logs/Bowtie2/{cohort_with_sample}_read_mapping_log.txt"
 	singularity:
@@ -312,7 +319,8 @@ rule map_reads_se:
 		"""
 		bowtie2 -q --end-to-end --sensitive \
 		--met-file {output.mapping_metric_reads} --sam-no-qname-trunc \
-		--threads {threads} --seed 7 --time -x resources/Ref/GCA_000001405__29_GRCh38__p14_masked \
+		--threads {threads} --seed 7 --time \
+		-x resources/Ref/{params.ref_basename} \
 		-U {input.trimmed_fqse} \
 		-S {output.human_reads} \
 		--un {output.non_human_fqSE}
@@ -378,23 +386,17 @@ rule bbnorm_se:
 # filter down to files with 100k reads
 rule filt_100k:
 	input:
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.1.fq",
-			cohort_with_sample = fq_R1_names_df["CohortSample"]),
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.2.fq",
-			cohort_with_sample = fq_R1_names_df["CohortSample"]),
-		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}_norm.SE.fq",
-			cohort_with_sample = fq_SE_names_df["CohortSample"]),
 		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.pe.COMPLETE",
 			cohort_with_sample = fq_R1_names_df["CohortSample"]),
 		expand("results/DataNonHuman/BBNorm_Reads/{cohort_with_sample}.se.COMPLETE",
-			cohort_with_sample = fq_SE_names_df["CohortSample"]),
-		filtering_script = 'workflow/scripts/snakemake_100k_filt.sh'
+			cohort_with_sample = fq_SE_names_df["CohortSample"])
 	log:
 		filt_100k_log = 'logs/100k_filt.txt'
 	output:
 		completion_100k = 'logs/completion/100k_filt__COMPLETE.txt'
 	shell:
-		'bash {input.filtering_script}'
+		'bash workflow/scripts/snakemake_100k_filt.sh'
+
 
 
 ### Part 3b: Assembly

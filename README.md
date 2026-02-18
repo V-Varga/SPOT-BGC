@@ -6,9 +6,9 @@ _A Snakemake Pipeline to Output meTagenomics-derived Biosynthetic Gene Clusters_
 
 Author: Vi Varga
 
-Current version: 3.1.1
+Current version: 3.1.2
 
-Last Major Update: 2026.01.06
+Last Major Update: 2026.02.04
 
 
 ## Introduction 
@@ -168,6 +168,21 @@ In addition to the thread count allocation, the following settings can be modifi
 
 [^2]: Note that the email feature requires the `mail` (https://linux.die.net/man/1/mail) Linux program to be installed.
 
+### Paired-End-only bug recovery workflow (v.3.1.2)
+
+A bug was noticed wherein if only paired-end files were provided to the workflow, mapping and and normalization did not proceed, causing the pipeline to fail. Single-end-only and mixed single- and paired-end cohort structures (the latter of which was used for testing) have no issues. 
+
+This bug is proving difficult to resolve, so a recovery workflow was designed using a new script, `PEonly_REPAIR.sh` 
+
+If only paired-end reads are used, the pipeline should be run in 3 steps: 
+
+```bash
+snakemake --use-singularity --omit-from filt_100k
+bash workflow/scripts/PEonly_REPAIR.sh threads reference_name
+# Please see the PEonly_REPAIR.sh scipt for full details on usage
+snakemake --use-singularity
+```
+
 ### Running on a SLURM HPC
 
 If you wish to run the SPOT-BGC pipeline in a SLURM environment, it is recommended to use an interactive session in an instance of `zellij`, `screen`, `tmux`, etc. Snakemake will automatically submit jobs and request resource allocation for you. While it is possible to include all pertinent information in the Snakemake command line call, I have included an example SLURM profile `config.yaml` file in the `profiles/slurm/` directory. Once modified with your HPC project ID, etc., it can be used to run the SPOT-BGC pipeline like so: 
@@ -191,9 +206,13 @@ snakemake --executor slurm --jobs 10 --profile=profiles/slurm --use-singularity 
 
 ### Current release version
 
-Minor QoL updates & bug fixes, 2026.01.06: Build 3.1.1
- - `config.yaml`, `Snakefile` and various scripts updated to allow user to specify the MAG bin size and associated MAG file extension
- - Fixed a minor bug in the `Snakefile` where the per-Cohort BGC prediction inputs were incorrectly specified to be the per-Sample binning outputs
+Bug hotfix, 2026.02.04: Build 3.1.2
+ - A bug was noticed wherein if only paired-end files were provided to the workflow, mapping and and normalization did not proceed, causing the pipeline to fail
+   - Single-end-only and mixed single- and paired-end cohort structures (the latter of which was used for testing) have no issues
+   - This bug is proving difficult to resolve, so a recovery workflow was designed using a new script, `PEonly_REPAIR.sh`
+   - If only paired-end reads are used, the pipeline should be run in 3 steps: `snakemake --use-singularity --omit-from filt_100k` → `bash PEonly_REPAIR.sh threads reference_name` → `snakemake --use-singularity`
+ - The reference file was left in the Snakefile by accident - this has been replaced by the corresponding `config.yaml` parameter, as originally intended
+ - Simplified contents of `rule all`
 
 ### Ongoing work for future versions
 
@@ -201,6 +220,10 @@ Potential future plans (no set date):
  - Branching pipeline: Allow user to choose which programs in the later parts of the pipeline actually need to be run.
 
 ### Logs of previous major updates
+
+Minor QoL updates & bug fixes, 2026.01.06: Build 3.1.1
+ - `config.yaml`, `Snakefile` and various scripts updated to allow user to specify the MAG bin size and associated MAG file extension
+ - Fixed a minor bug in the `Snakefile` where the per-Cohort BGC prediction inputs were incorrectly specified to be the per-Sample binning outputs
 
 Wildcard patch & minor updates, 2025.10.22: Build 3.1.0
  - Patch wildcard usage: Resolved issues relating to wildcard inconsistency that was causing the pipeline to occasionally crash
