@@ -168,7 +168,7 @@ In addition to the thread count allocation, the following settings can be modifi
 
 [^2]: Note that the email feature requires the `mail` (https://linux.die.net/man/1/mail) Linux program to be installed.
 
-#### Paired-End-only bug recovery workflow (v.3.1.2)
+### Paired-End-only bug recovery workflow (v.3.1.2)
 
 A bug was noticed wherein if only paired-end files were provided to the workflow, mapping and and normalization did not proceed, causing the pipeline to fail. Single-end-only and mixed single- and paired-end cohort structures (the latter of which was used for testing) have no issues. 
 
