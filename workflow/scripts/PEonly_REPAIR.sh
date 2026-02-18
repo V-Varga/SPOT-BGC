@@ -17,14 +17,15 @@
 # 	snakemake --use-singularity
 # 
 # Usage: 
-# 	./PEonly_REPAIR.sh threads reference_name mem_alloc
+# 	./PEonly_REPAIR.sh threads reference_name mem_alloc [user_email]
 # 	OR
-# 	bash PEonly_REPAIR.sh threads reference_name mem_alloc
+# 	bash PEonly_REPAIR.sh threads reference_name mem_alloc [user_email]
 # 
 # 	Where: 
 # 		threads = the number of threads to be used
 # 		reference_name = the shortened reference name (config['reference_short'])
 # 		mem_alloc = the memory allocation for BBNorm (config['bbnorm_memory'] without the '-' at the front)
+# 		user_email = email address of the user to notify of completion (optional argument)
 # 
 # 	Note that this script is intended to be run from the parent SPOT-BGC/ directory!
 #
@@ -36,6 +37,7 @@
 thread_count=$1;
 reference_name=$2;
 mem_alloc=$3;
+user_email=$4
 
 
 ### Running Bowtie2
@@ -73,6 +75,13 @@ ls results/DataNonHuman/NonHumanOG/*/*.1.fq | while read file; do
 	hist=results/DataNonHuman/BBNorm_Reads/${parentname}/${file_base3}_NON-human_map_input_kmers.png \
 	histout=results/DataNonHuman/BBNorm_Reads/${parentname}/${file_base3}_NON-human_map_output_kmers.png; 
 done > logs/BBNorm_paired__REPAIR.out;
+
+
+# Send user an email notifying of completion
+# ref: https://askubuntu.com/questions/1401513/sendemail-with-text-in-one-line
+if [[ -n "$user_email" ]]; then
+    sendmail "$user_email" <<< "SPOT-BGC PE-only repair mapping and normalization complete"
+fi;
 
 
 # Refs: 

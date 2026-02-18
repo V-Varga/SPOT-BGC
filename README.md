@@ -212,6 +212,7 @@ Bug hotfix, 2026.02.04: Build 3.1.2
    - This bug is proving difficult to resolve, so a recovery workflow was designed using a new script, `PEonly_REPAIR.sh`
    - If only paired-end reads are used, the pipeline should be run in 3 steps: `snakemake --use-singularity --omit-from filt_100k` → `bash PEonly_REPAIR.sh threads reference_name` → `snakemake --use-singularity`
  - The reference file was left in the Snakefile by accident - this has been replaced by the corresponding `config.yaml` parameter, as originally intended
+ - Simplified contents of `rule all`
 
 ### Ongoing work for future versions
 
